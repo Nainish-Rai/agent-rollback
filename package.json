@@ -1,0 +1,29 @@
+{
+  "name": "agent-rollback",
+  "version": "0.1.0",
+  "description": "Git-like rollback checkpoints for Codex CLI runs.",
+  "type": "module",
+  "bin": {
+    "agent-rollback": "./bin/agent-rollback.js"
+  },
+  "files": [
+    "bin",
+    "src",
+    "README.md",
+    "agent-rollback-prd.md"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "node --test",
+    "check": "node --check bin/agent-rollback.js && node --check src/cli.js"
+  },
+  "keywords": [
+    "codex",
+    "rollback",
+    "checkpoint",
+    "cli"
+  ],
+  "license": "MIT"
+}
