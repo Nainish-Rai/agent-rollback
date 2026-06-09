@@ -188,7 +188,14 @@ test('should log operations, revert an operation, and replay from a checkpoint',
     );
     assert.ok(secondOperation);
 
-    await runCli(['--cwd', workspaceRoot, 'op', 'revert', secondOperation.id, '--yes'], createMemoryIo());
+    const dryRun = createMemoryIo();
+    await runCli(['--cwd', workspaceRoot, 'op', 'revert', secondOperation.id, '--dry-run', '--json'], dryRun);
+    assert.equal(JSON.parse(dryRun.stdoutText).applied, false);
+    assert.equal(await readFile(path.join(workspaceRoot, 'index.txt'), 'utf8'), 'two\n');
+
+    const revertOutput = createMemoryIo();
+    await runCli(['--cwd', workspaceRoot, 'op', 'revert', secondOperation.id, '--yes'], revertOutput);
+    assert.match(revertOutput.stdoutText, /safety checkpoint/);
     assert.equal(await readFile(path.join(workspaceRoot, 'index.txt'), 'utf8'), 'one\n');
 
     const replay = createMemoryIo();

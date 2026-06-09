@@ -241,23 +241,38 @@ export async function runCli(args, io = process) {
     if (subcommand !== 'revert') {
       throw new UserError(`unknown operation subcommand: ${subcommand}`);
     }
-    const { json, positionalArgs, yes } = parseCommandFlags(commandArgs.slice(1));
-    const operationId = requireArgument(positionalArgs[0], 'operation id is required');
+    const flags = parseCommandFlags(commandArgs.slice(1));
+    const operationId = requireArgument(flags.positionalArgs[0], 'operation id is required');
     const runtime = getRuntimeOptions(options);
     const operation = await getOperation({ ...runtime, operationId });
     const checkpointId = operation.details?.previousCheckpointId;
     if (!checkpointId) {
       throw new UserError(`operation ${operation.id} has no previous checkpoint to restore`);
     }
-    if (!yes && !options.yes) {
+    if (!flags.dryRun && !flags.yes && !options.yes) {
       throw new UserError('op revert changes files; rerun with --yes to confirm');
     }
-    await restoreCheckpoint({ ...runtime, checkpointId });
+    const safetyCheckpoint = flags.dryRun
+      ? null
+      : await createCheckpoint({
+          ...runtime,
+          metadata: { operationId, source: 'op-revert-safety' },
+        });
+    if (!flags.dryRun) {
+      await restoreCheckpoint({ ...runtime, checkpointId });
+    }
     writeResult({
-      data: { operation, restoredCheckpointId: checkpointId },
+      data: {
+        applied: !flags.dryRun,
+        operation,
+        restoredCheckpointId: checkpointId,
+        safetyCheckpoint,
+      },
       io,
-      options: { ...options, json: options.json || json },
-      text: `Reverted ${operation.id}; restored workspace to ${checkpointId}\n`,
+      options: { ...options, json: options.json || flags.json },
+      text: flags.dryRun
+        ? `Would revert ${operation.id}; target checkpoint ${checkpointId}\n`
+        : `Reverted ${operation.id}; restored workspace to ${checkpointId}; safety checkpoint ${safetyCheckpoint.id}\n`,
     });
     return;
   }
