@@ -70,6 +70,15 @@ export async function createCheckpoint({ workspaceRoot, storeRoot, metadata = {}
   return summarizeCheckpoint(manifest);
 }
 
+export async function initializeStore({ workspaceRoot, storeRoot }) {
+  const resolvedWorkspaceRoot = path.resolve(requireValue(workspaceRoot, 'workspaceRoot is required'));
+  const resolvedStoreRoot = path.resolve(
+    storeRoot || path.join(resolvedWorkspaceRoot, '.agent-rollback'),
+  );
+  await ensureStore(resolvedStoreRoot);
+  return { storeRoot: resolvedStoreRoot, workspaceRoot: resolvedWorkspaceRoot };
+}
+
 export async function listCheckpoints({ storeRoot }) {
   const checkpointRoot = path.join(path.resolve(storeRoot), 'checkpoints');
   let checkpointIds;
