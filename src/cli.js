@@ -9,6 +9,7 @@ import {
   showCheckpoint,
 } from './snapshot.js';
 import { UserError } from './errors.js';
+import { runCodex } from './runner.js';
 
 const HELP_TEXT = `agent-rollback
 
@@ -21,7 +22,7 @@ Usage:
   agent-rollback show <checkpoint-id>
   agent-rollback diff <from-id> [to-id]
   agent-rollback revert <checkpoint-id> --yes
-  agent-rollback run codex <prompt-or-codex-args...>
+  agent-rollback run [--codex-bin <path>] codex <prompt-or-codex-args...>
 
 Options:
   --cwd <dir>          Workspace directory. Defaults to the current directory.
@@ -87,6 +88,21 @@ export async function runCli(args, io = process) {
     }
     await restoreCheckpoint({ ...getRuntimeOptions(options), checkpointId });
     io.stdout.write(`Restored workspace to ${checkpointId}\n`);
+    return;
+  }
+
+  if (command === 'run') {
+    const result = await runCodex({
+      args: commandArgs,
+      io,
+      ...getRuntimeOptions(options),
+    });
+    io.stdout.write(
+      `Codex run checkpoints:\nbefore: ${result.before.id}\nafter: ${result.after.id}\nexit: ${result.exitCode}\n`,
+    );
+    if (result.exitCode !== 0) {
+      io.exitCode = result.exitCode;
+    }
     return;
   }
 
