@@ -13,6 +13,32 @@ frequent, fine-grained checkpoints; the winning CLI tool will combine
 deterministic pre-mutation hooks, user-pinnable milestones, and an
 agent-callable MCP surface so Codex can roll itself back during a long task.
 
+## Implementation Status — June 9, 2026
+
+Implemented first-pass roadmap coverage:
+
+- **P1 Auto + Hybrid**: `init codex` installs repo-local hooks; hook handler
+  snapshots `SessionStart`, `UserPromptSubmit`, `PreToolUse`, and `PostToolUse`;
+  dedup skips unchanged states; `pin`, `unpin`, `prune`, `undo`, and `--json`
+  are implemented.
+- **P2 Interactive CLI/TUI**: `tui` renders a terminal checkpoint browser with
+  query filtering, interactive commands, `--no-input`, and JSON mode. This is a
+  lightweight terminal browser, not a full-screen Ink implementation.
+- **P3 MCP server**: `mcp` starts a stdio MCP server with 9 tools, 2 resource
+  templates, and 2 prompts. Restore tools default to dry-run and require force
+  for mutation.
+- **P4 Operation log + replay**: checkpoint creation/restores append to
+  `ops.jsonl`; `log`, `op revert`, and `replay` are implemented; hook
+  checkpoints capture a bounded Codex transcript tail when `transcript_path` is
+  provided.
+
+Remaining polish:
+
+- Replace `op revert` checkpoint restore with patch-level selective revert.
+- Replace the lightweight terminal browser with full-screen Ink/fzf/delta UI.
+- Add object garbage collection for unreferenced blobs after prune.
+- Add `codex exec --json` event-stream fallback when hooks are not trusted.
+
 ---
 
 ## 0. Where the MVP sits today

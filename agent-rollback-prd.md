@@ -11,15 +11,22 @@ and Git-repo safety checks as the stable automation path. A wrapper around
 `codex exec` gives users the core rollback value today without depending on an
 undocumented hook JSON contract.
 
-Current MVP behavior:
+Current implemented behavior:
 
 - Snapshot workspace before a Codex run.
 - Run `codex exec --sandbox workspace-write` unless the caller supplied sandbox
   flags.
 - Snapshot workspace after the run, even when Codex exits nonzero.
-- Provide `init`, `checkpoint`, `list`, `show`, `diff`, `revert`, and `run`.
+- Install repo-local Codex hooks with `init codex` for session, prompt,
+  pre-tool, and post-tool auto-checkpoints.
+- Provide `init`, `checkpoint`, `list`, `show`, `diff`, `pin`, `unpin`,
+  `prune`, `undo`, `log`, `op revert`, `replay`, `tui`, `mcp`, `revert`, and
+  `run`.
 - Store snapshots locally with content-addressed file blobs under
   `.agent-rollback`.
+- Store operation history in `.agent-rollback/ops.jsonl`.
+- Expose a stdio MCP server so agents can create, list, diff, pin, dry-run
+  restore, apply restore, prune, search, and undo checkpoints.
 
 Reference docs checked on June 9, 2026:
 

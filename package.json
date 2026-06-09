@@ -7,7 +7,9 @@
     "agent-rollback": "./bin/agent-rollback.js"
   },
   "files": [
+    "AGENTS.md",
     "bin",
+    "roadmap.md",
     "src",
     "README.md",
     "agent-rollback-prd.md"
