@@ -7,6 +7,9 @@ import { UserError } from './errors.js';
 export async function runCheckpointBrowser({ io = process, noInput = false, query = '', runtime }) {
   const allCheckpoints = await listCheckpoints(runtime);
   const checkpoints = filterCheckpoints(allCheckpoints, query);
+  if (!noInput && io.stdout?.isTTY) {
+    io.stdout.write('\x1b[2J\x1b[H');
+  }
   io.stdout.write(formatBrowser({ checkpoints, query }));
 
   if (noInput || !io.stdin?.isTTY) {

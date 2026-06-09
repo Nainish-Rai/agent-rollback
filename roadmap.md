@@ -22,8 +22,8 @@ Implemented first-pass roadmap coverage:
   dedup skips unchanged states; `pin`, `unpin`, `prune`, `undo`, and `--json`
   are implemented.
 - **P2 Interactive CLI/TUI**: `tui` renders a terminal checkpoint browser with
-  query filtering, interactive commands, `--no-input`, and JSON mode. This is a
-  lightweight terminal browser, not a full-screen Ink implementation.
+  query filtering, interactive commands, TTY screen clearing, `--no-input`, and
+  JSON mode.
 - **P3 MCP server**: `mcp` starts a stdio MCP server with 9 tools, 2 resource
   templates, and 2 prompts. Restore tools default to dry-run and require force
   for mutation.
@@ -44,7 +44,7 @@ Implemented first-pass roadmap coverage:
 
 Future UI polish:
 
-- Replace the lightweight terminal browser with full-screen Ink/fzf/delta UI.
+- Add optional fzf/delta integration for users who have those tools installed.
 
 ---
 

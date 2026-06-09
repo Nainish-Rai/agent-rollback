@@ -108,7 +108,8 @@ agent-rollback tui --query auth --no-input
 ```
 
 Inside interactive `tui`, `diff <n>` shows changed paths and a unified diff
-preview for the selected checkpoint.
+preview for the selected checkpoint. On a TTY, the browser opens as a cleared
+terminal surface; `--no-input` renders once for CI and agents.
 
 Inspect operation history and revert an operation to its prior checkpoint:
 
