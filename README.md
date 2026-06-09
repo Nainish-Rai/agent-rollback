@@ -115,6 +115,9 @@ agent-rollback op revert op-20260609-abcdef --yes
 ```
 
 Applied operation reverts create a safety checkpoint first.
+Operation reverts are selective: they revert paths touched by that operation and
+leave later unrelated files in place. If touched files changed again, rerun with
+`--force` only when overwriting those later edits is intended.
 
 Replay Codex from a previous checkpoint:
 
@@ -186,8 +189,7 @@ npm run check
 
 - No cloud sync.
 - TUI is a lightweight terminal browser, not a full-screen Ink app.
-- `op revert` restores the checkpoint before an operation and saves a safety
-  checkpoint first; it is not yet a patch-level selective revert that preserves
-  all later edits.
+- `op revert` is path-selective and saves a safety checkpoint first. It refuses
+  conflicts unless `--force` is supplied.
 - No Windows-specific path behavior beyond Node's standard APIs.
 - Restore is file-content atomic per file, not a full workspace transaction.

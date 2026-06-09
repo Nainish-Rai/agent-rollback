@@ -31,15 +31,17 @@ Implemented first-pass roadmap coverage:
   `ops.jsonl`; `log`, `op revert`, and `replay` are implemented; hook
   checkpoints capture a bounded Codex transcript tail when `transcript_path` is
   provided.
+- **Selective operation revert**: `op revert` now reverts only paths touched by
+  the operation, preserves unrelated later files, saves a safety checkpoint, and
+  requires `--force` for conflicts.
 - **Storage retention**: `prune` runs object garbage collection after deleting
   checkpoint manifests.
 - **Codex JSON fallback**: `run --event-stream` and `replay --event-stream`
   add Codex's `--json` flag and create deduped checkpoints from tool-like JSONL
   events.
 
-Remaining polish:
+Future UI polish:
 
-- Replace `op revert` checkpoint restore with patch-level selective revert.
 - Replace the lightweight terminal browser with full-screen Ink/fzf/delta UI.
 - Add richer line-level diff previews to the terminal browser.
 

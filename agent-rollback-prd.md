@@ -27,6 +27,8 @@ Current implemented behavior:
 - Store snapshots locally with content-addressed file blobs under
   `.agent-rollback`.
 - Store operation history in `.agent-rollback/ops.jsonl`.
+- Revert individual operations path-selectively while preserving unrelated later
+  files and saving a safety checkpoint.
 - Garbage-collect unreferenced content objects after pruning checkpoint
   manifests.
 - Expose a stdio MCP server so agents can create, list, diff, pin, dry-run
