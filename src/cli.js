@@ -18,6 +18,7 @@ import { startMcpServer } from './mcp.js';
 import { getOperation, listOperations } from './ops.js';
 import { replayFromCheckpoint } from './replay.js';
 import { runCodex } from './runner.js';
+import { selectivelyRevertOperation } from './selective-revert.js';
 import { runCheckpointBrowser } from './tui.js';
 
 const HELP_TEXT = `agent-rollback
@@ -258,13 +259,19 @@ export async function runCli(args, io = process) {
           ...runtime,
           metadata: { operationId, source: 'op-revert-safety' },
         });
+    let selectiveResult = null;
     if (!flags.dryRun) {
-      await restoreCheckpoint({ ...runtime, checkpointId });
+      selectiveResult = await selectivelyRevertOperation({
+        force: flags.force,
+        operation,
+        runtime,
+      });
     }
     writeResult({
       data: {
         applied: !flags.dryRun,
         operation,
+        revertedPaths: selectiveResult?.revertedPaths || [],
         restoredCheckpointId: checkpointId,
         safetyCheckpoint,
       },
@@ -415,6 +422,7 @@ function parseCommand(args) {
 function parseCommandFlags(args) {
   const positionalArgs = [];
   let dryRun = false;
+  let force = false;
   let json = false;
   let keepLast = 0;
   let keepPinned = true;
@@ -435,6 +443,10 @@ function parseCommandFlags(args) {
     }
     if (arg === '--dry-run') {
       dryRun = true;
+      continue;
+    }
+    if (arg === '--force') {
+      force = true;
       continue;
     }
     if (arg === '--no-input') {
@@ -467,7 +479,7 @@ function parseCommandFlags(args) {
     positionalArgs.push(arg);
   }
 
-  return { dryRun, json, keepLast, keepPinned, noInput, olderThan, positionalArgs, query, yes };
+  return { dryRun, force, json, keepLast, keepPinned, noInput, olderThan, positionalArgs, query, yes };
 }
 
 function parseRunCommandFlags(args) {
