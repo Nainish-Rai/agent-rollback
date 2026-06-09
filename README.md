@@ -19,6 +19,31 @@ From the project root you can also run it directly:
 node ./bin/agent-rollback.js --help
 ```
 
+`ar` is shipped as a second bin with the same subcommands, so `ar list`,
+`ar undo --yes`, etc. work as the short form.
+
+## AI agent skill
+
+A SKILL.md ships in the package at `skills/agent-rollback/SKILL.md`. It teaches
+AI agents (Codex CLI, Claude Code, Cursor, Gemini CLI) how to use both the MCP
+server and the `ar` CLI.
+
+Install it for the agent you use:
+
+```bash
+# Codex CLI
+mkdir -p ~/.codex/skills
+ln -s "$(npm root -g)/agent-rollback/skills/agent-rollback" ~/.codex/skills/
+
+# Claude Code
+mkdir -p ~/.claude/skills
+ln -s "$(npm root -g)/agent-rollback/skills/agent-rollback" ~/.claude/skills/
+
+# Cursor (project-only)
+mkdir -p .cursor/skills
+ln -s "$(npm root -g)/agent-rollback/skills/agent-rollback" .cursor/skills/
+```
+
 ## Usage
 
 Initialize local checkpoint storage:
