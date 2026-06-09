@@ -22,6 +22,7 @@ export async function installCodexHooks({ workspaceRoot }) {
 
 export async function handleCodexHook({ event, storeRoot }) {
   const workspaceRoot = path.resolve(event.cwd || process.cwd());
+  const transcriptTail = await readTranscriptTail(event.transcript_path);
   const checkpoint = await createCheckpoint({
     dedupe: true,
     storeRoot: storeRoot || path.join(workspaceRoot, '.agent-rollback'),
@@ -34,6 +35,7 @@ export async function handleCodexHook({ event, storeRoot }) {
       source: 'codex-hook',
       toolName: event.tool_name || '',
       toolUseId: event.tool_use_id || '',
+      transcriptTail,
       transcriptPath: event.transcript_path || '',
       turnId: event.turn_id || '',
     },
@@ -115,4 +117,17 @@ function truncateText(value, maxLength) {
     return value;
   }
   return `${value.slice(0, maxLength - 3)}...`;
+}
+
+async function readTranscriptTail(transcriptPath) {
+  if (!transcriptPath) {
+    return [];
+  }
+
+  try {
+    const transcript = await readFile(transcriptPath, 'utf8');
+    return transcript.split('\n').filter(Boolean).slice(-20).map((line) => truncateText(line, 1000));
+  } catch {
+    return [];
+  }
 }

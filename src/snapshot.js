@@ -13,6 +13,7 @@ import {
 import path from 'node:path';
 
 import { UserError, requireValue } from './errors.js';
+import { appendOperation } from './ops.js';
 import { listWorkspaceFiles, resolveWorkspacePath } from './workspace.js';
 
 const SCHEMA_VERSION = 1;
@@ -64,8 +65,9 @@ export async function createCheckpoint({ dedupe = false, workspaceRoot, storeRoo
     workspaceRoot: resolvedWorkspaceRoot,
   };
 
+  const latestManifest = await readLatestCheckpoint(resolvedStoreRoot);
+
   if (dedupe) {
-    const latestManifest = await readLatestCheckpoint(resolvedStoreRoot);
     if (latestManifest?.stateHash === manifest.stateHash) {
       return { ...summarizeCheckpoint(latestManifest), deduped: true };
     }
@@ -74,6 +76,17 @@ export async function createCheckpoint({ dedupe = false, workspaceRoot, storeRoo
   const checkpointDirectory = path.join(resolvedStoreRoot, 'checkpoints', manifest.id);
   await mkdir(checkpointDirectory, { recursive: true });
   await writeJsonAtomic(path.join(checkpointDirectory, 'manifest.json'), manifest);
+
+  await appendOperation({
+    details: {
+      checkpointId: manifest.id,
+      metadata,
+      previousCheckpointId: latestManifest?.id || null,
+      stateHash: manifest.stateHash,
+    },
+    storeRoot: resolvedStoreRoot,
+    type: 'checkpoint.created',
+  });
 
   return { ...summarizeCheckpoint(manifest), deduped: false };
 }
@@ -175,6 +188,12 @@ export async function restoreCheckpoint({ workspaceRoot, storeRoot, checkpointId
       workspaceRoot: resolvedWorkspaceRoot,
     });
   }
+
+  await appendOperation({
+    details: { checkpointId },
+    storeRoot: resolvedStoreRoot,
+    type: 'checkpoint.restored',
+  });
 }
 
 export function diffManifests(fromCheckpoint, toCheckpoint) {

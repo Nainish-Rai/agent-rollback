@@ -14,6 +14,8 @@ import {
 import { UserError } from './errors.js';
 import { handleCodexHook, installCodexHooks } from './hooks.js';
 import { startMcpServer } from './mcp.js';
+import { getOperation, listOperations } from './ops.js';
+import { replayFromCheckpoint } from './replay.js';
 import { runCodex } from './runner.js';
 import { runCheckpointBrowser } from './tui.js';
 
@@ -32,6 +34,9 @@ Usage:
   agent-rollback unpin <checkpoint-id>
   agent-rollback prune [--older-than <duration>] [--keep-last <count>] --yes
   agent-rollback undo [count] --yes
+  agent-rollback log
+  agent-rollback op revert <operation-id> --yes
+  agent-rollback replay <checkpoint-id> --yes codex <prompt-or-codex-args...>
   agent-rollback tui [--query <text>] [--no-input]
   agent-rollback mcp
   agent-rollback revert <checkpoint-id> --yes
@@ -214,6 +219,66 @@ export async function runCli(args, io = process) {
       options: { ...options, json: options.json || json },
       text: `Undid ${count} step${count === 1 ? '' : 's'}; restored workspace to ${target.id}\n`,
     });
+    return;
+  }
+
+  if (command === 'log') {
+    const { json } = parseCommandFlags(commandArgs);
+    const operations = await listOperations(getRuntimeOptions(options));
+    writeResult({
+      data: { operations },
+      io,
+      options: { ...options, json: options.json || json },
+      text: formatOperationLog(operations),
+    });
+    return;
+  }
+
+  if (command === 'op') {
+    const subcommand = requireArgument(commandArgs[0], 'operation subcommand is required');
+    if (subcommand !== 'revert') {
+      throw new UserError(`unknown operation subcommand: ${subcommand}`);
+    }
+    const { json, positionalArgs, yes } = parseCommandFlags(commandArgs.slice(1));
+    const operationId = requireArgument(positionalArgs[0], 'operation id is required');
+    const runtime = getRuntimeOptions(options);
+    const operation = await getOperation({ ...runtime, operationId });
+    const checkpointId = operation.details?.previousCheckpointId;
+    if (!checkpointId) {
+      throw new UserError(`operation ${operation.id} has no previous checkpoint to restore`);
+    }
+    if (!yes && !options.yes) {
+      throw new UserError('op revert changes files; rerun with --yes to confirm');
+    }
+    await restoreCheckpoint({ ...runtime, checkpointId });
+    writeResult({
+      data: { operation, restoredCheckpointId: checkpointId },
+      io,
+      options: { ...options, json: options.json || json },
+      text: `Reverted ${operation.id}; restored workspace to ${checkpointId}\n`,
+    });
+    return;
+  }
+
+  if (command === 'replay') {
+    const replayArgs = parseReplayArgs(commandArgs);
+    const outputAsJson = options.json || replayArgs.json;
+    const result = await replayFromCheckpoint({
+      args: replayArgs.args,
+      checkpointId: replayArgs.checkpointId,
+      force: options.yes || replayArgs.yes,
+      io: outputAsJson ? { stderr: io.stderr, stdout: io.stderr } : io,
+      runtime: getRuntimeOptions(options),
+    });
+    writeResult({
+      data: result,
+      io,
+      options: { ...options, json: outputAsJson },
+      text: `Replayed ${replayArgs.checkpointId}\nbefore: ${result.before.id}\nafter: ${result.after.id}\nexit: ${result.exitCode}\n`,
+    });
+    if (result.exitCode !== 0) {
+      io.exitCode = result.exitCode;
+    }
     return;
   }
 
@@ -404,6 +469,29 @@ function parseRunCommandFlags(args) {
   return { args: runArgs, json };
 }
 
+function parseReplayArgs(args) {
+  const checkpointId = requireArgument(args[0], 'checkpoint id is required');
+  const replayArgs = [];
+  let json = false;
+  let yes = false;
+
+  for (let index = 1; index < args.length; index += 1) {
+    const arg = args[index];
+    if (arg === '--yes') {
+      yes = true;
+      continue;
+    }
+    if (arg === '--json') {
+      json = true;
+      continue;
+    }
+    replayArgs.push(...args.slice(index));
+    break;
+  }
+
+  return { args: replayArgs, checkpointId, json, yes };
+}
+
 function getRuntimeOptions(options) {
   const workspaceRoot = path.resolve(options.cwd || process.cwd());
   return {
@@ -524,6 +612,19 @@ function formatPrunePlan(prunePlan, applied) {
   const action = applied ? 'Pruned' : 'Would prune';
   const lines = prunePlan.deleted.map((checkpoint) => `${checkpoint.id}\t${checkpoint.createdAt}`);
   return `${action} ${prunePlan.deleted.length} checkpoint${prunePlan.deleted.length === 1 ? '' : 's'}:\n${lines.join('\n')}\n`;
+}
+
+function formatOperationLog(operations) {
+  if (operations.length === 0) {
+    return 'No operations.\n';
+  }
+
+  return `${operations
+    .map((operation) => {
+      const checkpointId = operation.details?.checkpointId || operation.details?.previousCheckpointId || '';
+      return `${operation.id}\t${operation.createdAt}\t${operation.type}\t${checkpointId}`;
+    })
+    .join('\n')}\n`;
 }
 
 function parsePositiveInteger(value, message) {

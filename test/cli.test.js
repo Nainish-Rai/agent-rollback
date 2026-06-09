@@ -92,10 +92,13 @@ test('should install Codex hooks and create deduped hook checkpoints', async () 
     assert.equal(hookConfig.hooks.PreToolUse[0].matcher, '*');
 
     await writeFile(path.join(workspaceRoot, 'index.txt'), 'hooked\n');
+    const transcriptPath = path.join(workspaceRoot, 'session.jsonl');
+    await writeFile(transcriptPath, '{"type":"user","text":"refactor auth"}\n{"type":"tool","name":"Bash"}\n');
     const hookEvent = {
       cwd: workspaceRoot,
       hook_event_name: 'PostToolUse',
       session_id: 'session-1',
+      transcript_path: transcriptPath,
       tool_name: 'Bash',
       tool_use_id: 'tool-1',
       turn_id: 'turn-1',
@@ -116,6 +119,10 @@ test('should install Codex hooks and create deduped hook checkpoints', async () 
     assert.equal(checkpoints.length, 1);
     assert.equal(checkpoints[0].metadata.source, 'codex-hook');
     assert.equal(checkpoints[0].metadata.toolName, 'Bash');
+    assert.deepEqual(checkpoints[0].metadata.transcriptTail, [
+      '{"type":"user","text":"refactor auth"}',
+      '{"type":"tool","name":"Bash"}',
+    ]);
   } finally {
     await rm(workspaceRoot, { recursive: true, force: true });
   }
@@ -142,6 +149,70 @@ test('should render a no-input checkpoint browser and JSON browser output', asyn
     assert.equal(browserData.checkpoints.length, 1);
     assert.match(browserData.checkpoints[0].metadata.label, /stable/);
     assert.match(jsonBrowser.stderrText, /agent-rollback - checkpoints/);
+  } finally {
+    await rm(workspaceRoot, { recursive: true, force: true });
+  }
+});
+
+test('should log operations, revert an operation, and replay from a checkpoint', async () => {
+  const workspaceRoot = await mkdtemp(path.join(os.tmpdir(), 'agent-rollback-ops-'));
+  const fakeCodexPath = path.join(workspaceRoot, 'fake-codex.mjs');
+
+  try {
+    await writeFile(
+      fakeCodexPath,
+      [
+        '#!/usr/bin/env node',
+        'import { writeFileSync } from "node:fs";',
+        'import path from "node:path";',
+        'writeFileSync(path.join(process.cwd(), "replayed.txt"), process.argv.slice(2).join(" "));',
+        '',
+      ].join('\n'),
+    );
+    await chmod(fakeCodexPath, 0o755);
+
+    await writeFile(path.join(workspaceRoot, 'index.txt'), 'one\n');
+    const firstOutput = createMemoryIo();
+    await runCli(['--cwd', workspaceRoot, 'checkpoint', '--json', 'first'], firstOutput);
+    const firstCheckpoint = JSON.parse(firstOutput.stdoutText).checkpoint;
+    await wait(5);
+
+    await writeFile(path.join(workspaceRoot, 'index.txt'), 'two\n');
+    await runCli(['--cwd', workspaceRoot, 'checkpoint', 'second'], createMemoryIo());
+
+    const log = createMemoryIo();
+    await runCli(['--cwd', workspaceRoot, 'log', '--json'], log);
+    const operations = JSON.parse(log.stdoutText).operations;
+    const secondOperation = operations.find(
+      (operation) => operation.details?.previousCheckpointId === firstCheckpoint.id,
+    );
+    assert.ok(secondOperation);
+
+    await runCli(['--cwd', workspaceRoot, 'op', 'revert', secondOperation.id, '--yes'], createMemoryIo());
+    assert.equal(await readFile(path.join(workspaceRoot, 'index.txt'), 'utf8'), 'one\n');
+
+    const replay = createMemoryIo();
+    await runCli(
+      [
+        '--cwd',
+        workspaceRoot,
+        'replay',
+        firstCheckpoint.id,
+        '--yes',
+        '--json',
+        '--codex-bin',
+        fakeCodexPath,
+        'codex',
+        'try again',
+      ],
+      replay,
+    );
+    const replayResult = JSON.parse(replay.stdoutText);
+    assert.match(replayResult.before.id, new RegExp(checkpointIdPattern()));
+    assert.equal(
+      await readFile(path.join(workspaceRoot, 'replayed.txt'), 'utf8'),
+      'exec --sandbox workspace-write try again',
+    );
   } finally {
     await rm(workspaceRoot, { recursive: true, force: true });
   }
