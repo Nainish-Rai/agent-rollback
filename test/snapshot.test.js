@@ -77,3 +77,36 @@ test('should garbage collect unreferenced content objects', async () => {
     await rm(workspaceRoot, { recursive: true, force: true });
   }
 });
+
+test('should encode label and prompt into human-readable checkpoint ids', async () => {
+  const workspaceRoot = await mkdtemp(path.join(os.tmpdir(), 'agent-rollback-slug-'));
+  const storeRoot = path.join(workspaceRoot, '.agent-rollback');
+
+  try {
+    const labeled = await createCheckpoint({
+      storeRoot,
+      workspaceRoot,
+      metadata: { label: 'before refactor' },
+    });
+    assert.match(labeled.id, /^cp-\d{6}-before-refactor-[0-9a-f]{4}$/);
+
+    const fromPrompt = await createCheckpoint({
+      storeRoot,
+      workspaceRoot,
+      metadata: { prompt: 'Refactor the auth module!' },
+    });
+    assert.match(fromPrompt.id, /^cp-\d{6}-refactor-the-auth-module-[0-9a-f]{4}$/);
+
+    const fromTool = await createCheckpoint({
+      storeRoot,
+      workspaceRoot,
+      metadata: { hookEvent: 'PreToolUse', toolName: 'Edit' },
+    });
+    assert.match(fromTool.id, /^cp-\d{6}-edit-[0-9a-f]{4}$/);
+
+    const unlabeled = await createCheckpoint({ storeRoot, workspaceRoot });
+    assert.match(unlabeled.id, /^cp-\d{6}-[0-9a-f]{6}$/);
+  } finally {
+    await rm(workspaceRoot, { recursive: true, force: true });
+  }
+});

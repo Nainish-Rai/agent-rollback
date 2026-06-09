@@ -60,7 +60,7 @@ export async function createCheckpoint({ dedupe = false, workspaceRoot, storeRoo
   const manifest = {
     createdAt: new Date().toISOString(),
     files,
-    id: createCheckpointId(),
+    id: createCheckpointId(resolveCheckpointSlug(metadata)),
     metadata,
     schemaVersion: SCHEMA_VERSION,
     stateHash: hashManifestFiles(files),
@@ -275,9 +275,29 @@ async function ensureStore(storeRoot) {
   await mkdir(path.join(storeRoot, 'objects'), { recursive: true });
 }
 
-function createCheckpointId() {
-  const timestamp = new Date().toISOString().replace(/[-:.TZ]/g, '').slice(0, 14);
+function createCheckpointId(slug = '') {
+  const timestamp = new Date().toISOString().replace(/[-:.TZ]/g, '').slice(8, 14);
+  const cleanedSlug = slugify(slug);
+  if (cleanedSlug) {
+    return `cp-${timestamp}-${cleanedSlug}-${randomBytes(2).toString('hex')}`;
+  }
   return `cp-${timestamp}-${randomBytes(3).toString('hex')}`;
+}
+
+function resolveCheckpointSlug(metadata = {}) {
+  return metadata.label || metadata.prompt || metadata.toolName || metadata.hookEvent || '';
+}
+
+function slugify(text, maxLength = 32) {
+  if (!text || typeof text !== 'string') {
+    return '';
+  }
+  return text
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, maxLength)
+    .replace(/-+$/, '');
 }
 
 function hashBuffer(buffer) {
