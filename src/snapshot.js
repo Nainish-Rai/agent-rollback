@@ -60,6 +60,7 @@ export async function createCheckpoint({ workspaceRoot, storeRoot, metadata = {}
     id: createCheckpointId(),
     metadata,
     schemaVersion: SCHEMA_VERSION,
+    stateHash: hashManifestFiles(files),
     workspaceRoot: resolvedWorkspaceRoot,
   };
 
@@ -101,6 +102,40 @@ export async function listCheckpoints({ storeRoot }) {
 
 export async function showCheckpoint({ storeRoot, checkpointId }) {
   return readCheckpoint(storeRoot, checkpointId);
+}
+
+export async function pinCheckpoint({ storeRoot, checkpointId, label }) {
+  return updateCheckpointMetadata({
+    checkpointId,
+    storeRoot,
+    updateMetadata(metadata) {
+      return {
+        ...metadata,
+        label: label || metadata.label || '',
+        pinned: true,
+        pinnedAt: new Date().toISOString(),
+      };
+    },
+  });
+}
+
+export async function unpinCheckpoint({ storeRoot, checkpointId }) {
+  return updateCheckpointMetadata({
+    checkpointId,
+    storeRoot,
+    updateMetadata(metadata) {
+      const { pinnedAt, ...rest } = metadata;
+      return {
+        ...rest,
+        pinned: false,
+      };
+    },
+  });
+}
+
+export async function deleteCheckpoint({ storeRoot, checkpointId }) {
+  const safeCheckpointId = requireSafeCheckpointId(checkpointId);
+  await rm(getCheckpointDirectory(storeRoot, safeCheckpointId), { force: true, recursive: true });
 }
 
 export async function diffCheckpoints({ storeRoot, fromId, toId }) {
@@ -202,7 +237,7 @@ async function writeJsonAtomic(filePath, value) {
 
 async function readCheckpoint(storeRoot, checkpointId) {
   const safeCheckpointId = requireSafeCheckpointId(checkpointId);
-  const manifestPath = path.join(path.resolve(storeRoot), 'checkpoints', safeCheckpointId, 'manifest.json');
+  const manifestPath = getCheckpointManifestPath(storeRoot, safeCheckpointId);
   let manifest;
 
   try {
@@ -223,6 +258,26 @@ async function readCheckpoint(storeRoot, checkpointId) {
   return manifest;
 }
 
+async function updateCheckpointMetadata({ storeRoot, checkpointId, updateMetadata }) {
+  const safeCheckpointId = requireSafeCheckpointId(checkpointId);
+  const manifest = await readCheckpoint(storeRoot, safeCheckpointId);
+  const updatedManifest = {
+    ...manifest,
+    metadata: updateMetadata(manifest.metadata || {}),
+    updatedAt: new Date().toISOString(),
+  };
+  await writeJsonAtomic(getCheckpointManifestPath(storeRoot, safeCheckpointId), updatedManifest);
+  return summarizeCheckpoint(updatedManifest);
+}
+
+function getCheckpointDirectory(storeRoot, checkpointId) {
+  return path.join(path.resolve(storeRoot), 'checkpoints', checkpointId);
+}
+
+function getCheckpointManifestPath(storeRoot, checkpointId) {
+  return path.join(getCheckpointDirectory(storeRoot, checkpointId), 'manifest.json');
+}
+
 function requireSafeCheckpointId(checkpointId) {
   const value = requireValue(checkpointId, 'checkpoint id is required');
   if (!/^[a-zA-Z0-9._-]+$/.test(value)) {
@@ -237,8 +292,17 @@ function summarizeCheckpoint(manifest) {
     fileCount: Object.keys(manifest.files || {}).length,
     id: manifest.id,
     metadata: manifest.metadata || {},
+    stateHash: manifest.stateHash || hashManifestFiles(manifest.files || {}),
+    updatedAt: manifest.updatedAt || null,
     workspaceRoot: manifest.workspaceRoot,
   };
+}
+
+function hashManifestFiles(files) {
+  const stableEntries = Object.entries(files)
+    .sort(([leftPath], [rightPath]) => leftPath.localeCompare(rightPath))
+    .map(([relativePath, fileEntry]) => [relativePath, fileIdentity(fileEntry)]);
+  return createHash('sha256').update(JSON.stringify(stableEntries)).digest('hex');
 }
 
 function fileIdentity(fileEntry) {

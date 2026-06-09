@@ -30,6 +30,56 @@ test('should create and restore checkpoints through the CLI', async () => {
   }
 });
 
+test('should support JSON output, pin, prune, and undo workflows', async () => {
+  const workspaceRoot = await mkdtemp(path.join(os.tmpdir(), 'agent-rollback-hybrid-'));
+
+  try {
+    await writeFile(path.join(workspaceRoot, 'index.txt'), 'one\n');
+    const firstOutput = createMemoryIo();
+    await runCli(['--cwd', workspaceRoot, 'checkpoint', '--json', 'stable'], firstOutput);
+    const firstCheckpoint = JSON.parse(firstOutput.stdoutText).checkpoint;
+    await wait(5);
+
+    await writeFile(path.join(workspaceRoot, 'index.txt'), 'two\n');
+    const secondOutput = createMemoryIo();
+    await runCli(['--cwd', workspaceRoot, 'checkpoint', '--json', 'temporary'], secondOutput);
+    const secondCheckpoint = JSON.parse(secondOutput.stdoutText).checkpoint;
+    await wait(5);
+
+    await writeFile(path.join(workspaceRoot, 'index.txt'), 'three\n');
+    await runCli(['--cwd', workspaceRoot, 'checkpoint', 'latest'], createMemoryIo());
+
+    await runCli(['--cwd', workspaceRoot, 'pin', firstCheckpoint.id, 'known good'], createMemoryIo());
+
+    const dryRun = createMemoryIo();
+    await runCli(['--cwd', workspaceRoot, 'prune', '--keep-last', '1', '--dry-run', '--json'], dryRun);
+    const dryRunPlan = JSON.parse(dryRun.stdoutText);
+    assert.deepEqual(
+      dryRunPlan.deleted.map((checkpoint) => checkpoint.id),
+      [secondCheckpoint.id],
+    );
+    assert.equal(dryRunPlan.applied, false);
+
+    await runCli(['--cwd', workspaceRoot, 'prune', '--keep-last', '1', '--yes'], createMemoryIo());
+
+    const list = createMemoryIo();
+    await runCli(['--cwd', workspaceRoot, 'list', '--json'], list);
+    const checkpoints = JSON.parse(list.stdoutText).checkpoints;
+    assert.equal(checkpoints.length, 2);
+    assert.equal(checkpoints.some((checkpoint) => checkpoint.id === secondCheckpoint.id), false);
+    assert.deepEqual(
+      checkpoints.map((checkpoint) => checkpoint.id),
+      [firstCheckpoint.id, checkpoints.at(-1).id],
+    );
+    assert.equal(checkpoints[0].metadata.pinned, true);
+
+    await runCli(['--cwd', workspaceRoot, 'undo', '--yes'], createMemoryIo());
+    assert.equal(await readFile(path.join(workspaceRoot, 'index.txt'), 'utf8'), 'one\n');
+  } finally {
+    await rm(workspaceRoot, { recursive: true, force: true });
+  }
+});
+
 test('should wrap a Codex run with before and after checkpoints', async () => {
   const workspaceRoot = await mkdtemp(path.join(os.tmpdir(), 'agent-rollback-run-'));
   const fakeCodexPath = path.join(workspaceRoot, 'fake-codex.mjs');
@@ -49,12 +99,13 @@ test('should wrap a Codex run with before and after checkpoints', async () => {
 
     const output = createMemoryIo();
     await runCli(
-      ['--cwd', workspaceRoot, 'run', '--codex-bin', fakeCodexPath, 'codex', 'edit the app'],
+      ['--cwd', workspaceRoot, 'run', '--json', '--codex-bin', fakeCodexPath, 'codex', 'edit the app'],
       output,
     );
 
-    const beforeCheckpointId = extractLabeledCheckpointId(output.stdoutText, 'before');
-    assert.match(output.stdoutText, new RegExp(`after: ${checkpointIdPattern()}`));
+    const runResult = JSON.parse(output.stdoutText);
+    const beforeCheckpointId = runResult.before.id;
+    assert.match(runResult.after.id, new RegExp(checkpointIdPattern()));
     assert.equal(
       await readFile(path.join(workspaceRoot, 'codex-output.txt'), 'utf8'),
       'exec --sandbox workspace-write edit the app',
@@ -106,4 +157,10 @@ function extractLabeledCheckpointId(output, label) {
 
 function checkpointIdPattern() {
   return 'cp-[a-zA-Z0-9._-]+';
+}
+
+function wait(milliseconds) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, milliseconds);
+  });
 }
