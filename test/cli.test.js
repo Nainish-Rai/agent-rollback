@@ -121,6 +121,32 @@ test('should install Codex hooks and create deduped hook checkpoints', async () 
   }
 });
 
+test('should render a no-input checkpoint browser and JSON browser output', async () => {
+  const workspaceRoot = await mkdtemp(path.join(os.tmpdir(), 'agent-rollback-tui-'));
+
+  try {
+    await writeFile(path.join(workspaceRoot, 'index.txt'), 'one\n');
+    await runCli(['--cwd', workspaceRoot, 'checkpoint', 'stable auth'], createMemoryIo());
+    await writeFile(path.join(workspaceRoot, 'index.txt'), 'two\n');
+    await runCli(['--cwd', workspaceRoot, 'checkpoint', 'latest billing'], createMemoryIo());
+
+    const browser = createMemoryIo();
+    await runCli(['--cwd', workspaceRoot, 'tui', '--query', 'billing', '--no-input'], browser);
+    assert.match(browser.stdoutText, /agent-rollback - checkpoints/);
+    assert.match(browser.stdoutText, /latest billing/);
+    assert.doesNotMatch(browser.stdoutText, /stable auth/);
+
+    const jsonBrowser = createMemoryIo();
+    await runCli(['--cwd', workspaceRoot, 'tui', '--query', 'stable', '--no-input', '--json'], jsonBrowser);
+    const browserData = JSON.parse(jsonBrowser.stdoutText);
+    assert.equal(browserData.checkpoints.length, 1);
+    assert.match(browserData.checkpoints[0].metadata.label, /stable/);
+    assert.match(jsonBrowser.stderrText, /agent-rollback - checkpoints/);
+  } finally {
+    await rm(workspaceRoot, { recursive: true, force: true });
+  }
+});
+
 test('should wrap a Codex run with before and after checkpoints', async () => {
   const workspaceRoot = await mkdtemp(path.join(os.tmpdir(), 'agent-rollback-run-'));
   const fakeCodexPath = path.join(workspaceRoot, 'fake-codex.mjs');

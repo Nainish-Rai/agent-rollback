@@ -14,6 +14,7 @@ import {
 import { UserError } from './errors.js';
 import { handleCodexHook, installCodexHooks } from './hooks.js';
 import { runCodex } from './runner.js';
+import { runCheckpointBrowser } from './tui.js';
 
 const HELP_TEXT = `agent-rollback
 
@@ -30,6 +31,7 @@ Usage:
   agent-rollback unpin <checkpoint-id>
   agent-rollback prune [--older-than <duration>] [--keep-last <count>] --yes
   agent-rollback undo [count] --yes
+  agent-rollback tui [--query <text>] [--no-input]
   agent-rollback revert <checkpoint-id> --yes
   agent-rollback run [--codex-bin <path>] codex <prompt-or-codex-args...>
 
@@ -37,6 +39,7 @@ Options:
   --cwd <dir>          Workspace directory. Defaults to the current directory.
   --store <dir>        Checkpoint store directory. Defaults to .agent-rollback.
   --json              Print JSON for automation and agent workflows.
+  --no-input          Do not prompt; render once and exit.
   --yes               Confirm destructive operations.
   --help              Show this help.
 `;
@@ -212,6 +215,26 @@ export async function runCli(args, io = process) {
     return;
   }
 
+  if (command === 'tui') {
+    const flags = parseCommandFlags(commandArgs);
+    const outputAsJson = options.json || flags.json;
+    const result = await runCheckpointBrowser({
+      io: outputAsJson ? { ...io, stdout: io.stderr } : io,
+      noInput: options.noInput || flags.noInput,
+      query: flags.query || '',
+      runtime: getRuntimeOptions(options),
+    });
+    if (outputAsJson) {
+      writeResult({
+        data: result,
+        io,
+        options: { ...options, json: true },
+        text: '',
+      });
+    }
+    return;
+  }
+
   if (command === 'revert') {
     const { json, positionalArgs, yes } = parseCommandFlags(commandArgs);
     const checkpointId = requireArgument(positionalArgs[0], 'checkpoint id is required');
@@ -254,7 +277,7 @@ export async function runCli(args, io = process) {
 export { HELP_TEXT };
 
 function parseCommand(args) {
-  const options = { cwd: process.cwd(), json: false, store: null, yes: false };
+  const options = { cwd: process.cwd(), json: false, noInput: false, store: null, yes: false };
   const remainingArgs = [];
 
   for (let index = 0; index < args.length; index += 1) {
@@ -282,6 +305,11 @@ function parseCommand(args) {
       continue;
     }
 
+    if (arg === '--no-input') {
+      options.noInput = true;
+      continue;
+    }
+
     remainingArgs.push(...args.slice(index));
     break;
   }
@@ -299,7 +327,9 @@ function parseCommandFlags(args) {
   let json = false;
   let keepLast = 0;
   let keepPinned = true;
+  let noInput = false;
   let olderThan = null;
+  let query = '';
   let yes = false;
 
   for (let index = 0; index < args.length; index += 1) {
@@ -314,6 +344,10 @@ function parseCommandFlags(args) {
     }
     if (arg === '--dry-run') {
       dryRun = true;
+      continue;
+    }
+    if (arg === '--no-input') {
+      noInput = true;
       continue;
     }
     if (arg === '--keep-pinned') {
@@ -334,10 +368,15 @@ function parseCommandFlags(args) {
       index += 1;
       continue;
     }
+    if (arg === '--query') {
+      query = requireArgument(args[index + 1], '--query requires text');
+      index += 1;
+      continue;
+    }
     positionalArgs.push(arg);
   }
 
-  return { dryRun, json, keepLast, keepPinned, olderThan, positionalArgs, yes };
+  return { dryRun, json, keepLast, keepPinned, noInput, olderThan, positionalArgs, query, yes };
 }
 
 function parseRunCommandFlags(args) {
