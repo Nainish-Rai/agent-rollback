@@ -7,6 +7,8 @@ import {
   readdir,
   rename,
   rm,
+  rmdir,
+  stat,
   symlink,
   writeFile,
 } from 'node:fs/promises';
@@ -158,6 +160,51 @@ export async function deleteCheckpoint({ storeRoot, checkpointId }) {
   await rm(getCheckpointDirectory(storeRoot, safeCheckpointId), { force: true, recursive: true });
 }
 
+export async function collectGarbage({ storeRoot }) {
+  const referencedObjects = await listReferencedObjects(storeRoot);
+  const objectRoot = path.join(path.resolve(storeRoot), 'objects');
+  let deletedBytes = 0;
+  let deletedObjects = 0;
+
+  let prefixEntries;
+  try {
+    prefixEntries = await readdir(objectRoot, { withFileTypes: true });
+  } catch (error) {
+    if (error && error.code === 'ENOENT') {
+      return { deletedBytes, deletedObjects };
+    }
+    throw error;
+  }
+
+  for (const prefixEntry of prefixEntries) {
+    if (!prefixEntry.isDirectory()) {
+      continue;
+    }
+
+    const prefixDirectory = path.join(objectRoot, prefixEntry.name);
+    const objectEntries = await readdir(prefixDirectory, { withFileTypes: true });
+    for (const objectEntry of objectEntries) {
+      if (!objectEntry.isFile() || referencedObjects.has(objectEntry.name)) {
+        continue;
+      }
+
+      const objectPath = path.join(prefixDirectory, objectEntry.name);
+      const objectStats = await stat(objectPath);
+      await rm(objectPath, { force: true });
+      deletedBytes += objectStats.size;
+      deletedObjects += 1;
+    }
+
+    await rmdir(prefixDirectory).catch((error) => {
+      if (!error || (error.code !== 'ENOTEMPTY' && error.code !== 'ENOENT')) {
+        throw error;
+      }
+    });
+  }
+
+  return { deletedBytes, deletedObjects };
+}
+
 export async function diffCheckpoints({ storeRoot, fromId, toId }) {
   const fromCheckpoint = await readCheckpoint(storeRoot, fromId);
   const toCheckpoint = await readCheckpoint(storeRoot, toId);
@@ -302,6 +349,32 @@ async function readLatestCheckpoint(storeRoot) {
   );
 
   return checkpoints.sort((left, right) => left.createdAt.localeCompare(right.createdAt)).at(-1) || null;
+}
+
+async function listReferencedObjects(storeRoot) {
+  const checkpointRoot = path.join(path.resolve(storeRoot), 'checkpoints');
+  const referencedObjects = new Set();
+  let checkpointIds;
+
+  try {
+    checkpointIds = await readdir(checkpointRoot);
+  } catch (error) {
+    if (error && error.code === 'ENOENT') {
+      return referencedObjects;
+    }
+    throw error;
+  }
+
+  for (const checkpointId of checkpointIds) {
+    const checkpoint = await readCheckpoint(storeRoot, checkpointId);
+    for (const fileEntry of Object.values(checkpoint.files || {})) {
+      if (fileEntry.type === 'file') {
+        referencedObjects.add(fileEntry.sha256);
+      }
+    }
+  }
+
+  return referencedObjects;
 }
 
 async function updateCheckpointMetadata({ storeRoot, checkpointId, updateMetadata }) {

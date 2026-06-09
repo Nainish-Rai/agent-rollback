@@ -1,6 +1,7 @@
 import path from 'node:path';
 
 import {
+  collectGarbage,
   createCheckpoint,
   deleteCheckpoint,
   diffCheckpoints,
@@ -194,6 +195,7 @@ export async function runCli(args, io = process) {
           deleteCheckpoint({ ...getRuntimeOptions(options), checkpointId: checkpoint.id }),
         ),
       );
+      prunePlan.garbageCollection = await collectGarbage(getRuntimeOptions(options));
     }
     writeResult({
       data: { ...prunePlan, applied: shouldApply },

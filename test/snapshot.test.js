@@ -4,7 +4,13 @@ import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
 
-import { createCheckpoint, diffCheckpoints, restoreCheckpoint } from '../src/snapshot.js';
+import {
+  collectGarbage,
+  createCheckpoint,
+  deleteCheckpoint,
+  diffCheckpoints,
+  restoreCheckpoint,
+} from '../src/snapshot.js';
 
 test('should restore files to a previous checkpoint', async () => {
   const workspaceRoot = await mkdtemp(path.join(os.tmpdir(), 'agent-rollback-workspace-'));
@@ -47,6 +53,26 @@ test('should restore files to a previous checkpoint', async () => {
     await assert.rejects(readFile(path.join(workspaceRoot, 'new-file.txt'), 'utf8'), {
       code: 'ENOENT',
     });
+  } finally {
+    await rm(workspaceRoot, { recursive: true, force: true });
+  }
+});
+
+test('should garbage collect unreferenced content objects', async () => {
+  const workspaceRoot = await mkdtemp(path.join(os.tmpdir(), 'agent-rollback-gc-'));
+  const storeRoot = path.join(workspaceRoot, '.agent-rollback');
+
+  try {
+    await writeFile(path.join(workspaceRoot, 'app.js'), 'v1\n');
+    const first = await createCheckpoint({ storeRoot, workspaceRoot });
+
+    await writeFile(path.join(workspaceRoot, 'app.js'), 'v2\n');
+    await createCheckpoint({ storeRoot, workspaceRoot });
+
+    await deleteCheckpoint({ checkpointId: first.id, storeRoot });
+    const result = await collectGarbage({ storeRoot });
+    assert.equal(result.deletedObjects, 1);
+    assert.ok(result.deletedBytes > 0);
   } finally {
     await rm(workspaceRoot, { recursive: true, force: true });
   }
