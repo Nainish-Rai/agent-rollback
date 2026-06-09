@@ -13,6 +13,7 @@ import {
 } from './snapshot.js';
 import { UserError } from './errors.js';
 import { handleCodexHook, installCodexHooks } from './hooks.js';
+import { startMcpServer } from './mcp.js';
 import { runCodex } from './runner.js';
 import { runCheckpointBrowser } from './tui.js';
 
@@ -32,6 +33,7 @@ Usage:
   agent-rollback prune [--older-than <duration>] [--keep-last <count>] --yes
   agent-rollback undo [count] --yes
   agent-rollback tui [--query <text>] [--no-input]
+  agent-rollback mcp
   agent-rollback revert <checkpoint-id> --yes
   agent-rollback run [--codex-bin <path>] codex <prompt-or-codex-args...>
 
@@ -232,6 +234,11 @@ export async function runCli(args, io = process) {
         text: '',
       });
     }
+    return;
+  }
+
+  if (command === 'mcp') {
+    await startMcpServer(getRuntimeOptions(options));
     return;
   }
 
