@@ -686,7 +686,7 @@ By end of week 2: polish, edge cases, Show HN draft.
 
 ## 20. Resume Bullet This Generates
 
-> **Built `agent-rollback`** — npm-installable safety net for OpenAI Codex CLI. Installs hook at `~/.codex/hooks.json`, captures checkpoints via hybrid hooks + chokidar FS watcher (covers `apply_patch` gaps in upstream), supports per-checkpoint revert with atomic restore. 3-module core (~600 lines) hides COW + git-stash + content-addressed storage behind a 3-method interface. Used to safely run 200+ agent experiments with zero data loss.
+> **Built `agent-rollback` MVP** — npm-installable safety net for OpenAI Codex CLI. Wraps `codex exec` with before/after workspace checkpoints, stores file contents in a local content-addressed object store, and supports `list`, `show`, `diff`, and `revert` commands for Git-like rollback. Verified with Node integration tests that mutate and restore temporary workspaces.
 
 ---
 
