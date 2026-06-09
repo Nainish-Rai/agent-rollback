@@ -48,15 +48,16 @@ Future UI polish:
 
 ---
 
-## 0. Where the MVP sits today
+## 0. Where the product sits today
 
-| Strength | Weakness vs. competitors |
+| Implemented strength | Known tradeoff |
 |---|---|
-| CLI-first (works for Codex, Claude Code, Aider) | Manual-only; no per-tool-call auto |
-| Explicit `diff` and `prune` | No TUI; only plain text output |
-| `run codex <args>` wrapper | No MCP server (agent can't trigger rollback) |
-| Local content-addressed store | No checkpoint naming / pinning / labels |
-| Git-aware (uses `git ls-files`) | No conversation capture (no `/rewind` equivalent) |
+| CLI-first rollback around `codex exec` | Native adapters for other agents are still future work |
+| Codex hooks and JSON event-stream fallback | Hooks still depend on Codex trust/review flow |
+| Pin/unpin/prune/undo plus object GC | Prune keeps object GC local; no cloud retention |
+| Terminal browser with query, JSON, no-input, and unified diff preview | Optional fzf/delta integrations are future polish |
+| Stdio MCP server with rollback tools/resources/prompts | Stdio-only; no remote transport yet |
+| Operation log, selective `op revert`, replay, transcript-tail capture | Replay reruns Codex; it does not replay every historical tool call deterministically |
 
 ---
 
@@ -263,17 +264,15 @@ All run on Node ≥20 (your engines field is already `>=20`).
 
 ---
 
-## 7. Suggested 4-phase roadmap
+## 7. Implemented 4-phase roadmap
 
-| Phase | Scope | Effort | Outcome |
+| Phase | Scope | Status | Outcome |
 |---|---|---|---|
-| **P0 — MVP** ✅ | before/after `codex exec`, 7 commands, content-addressed store | done | Shipped |
-| **P1 — Auto + Hybrid** | Codex hooks.json install; auto-checkpoint on every tool call; `pin`/`unpin`; `prune --keep-pinned`; `undo`/`undo N`; `--json` everywhere | 2-3 wks | Matches Cursor/Cline baseline |
-| **P2 — Interactive TUI** | Ink + clack; `agent-rollback tui` opens fuzzy checkpoint browser with diff preview; `revert --interactive` for impact summary; side-by-side diff; NO_COLOR + a11y | 2-3 wks | Matches lazygit / jj-tui polish |
-| **P3 — MCP server** | `@modelcontextprotocol/sdk`; 9 tools + 2 resources + 2 prompts; shared core with CLI; ship as `npx agent-rollback mcp` for direct Codex config | 2-3 wks | Unique: agent can roll itself back |
-| **P4 — Operation log + replay** | jj-style op log; selective `op revert`; conversation capture from Codex session JSONL; `replay` to re-run a past Codex session | 3-4 wks | Unique: non-linear undo + replay |
-
-Total to v1.0: ~10-13 weeks of focused work on top of MVP.
+| **P0 — MVP** | before/after `codex exec`, core commands, content-addressed store | Implemented | Baseline rollback works |
+| **P1 — Auto + Hybrid** | Codex hooks, event-stream fallback, pin/unpin, prune, undo, JSON | Implemented | Automatic and manual checkpoints coexist |
+| **P2 — Interactive TUI** | terminal checkpoint browser, query, no-input, JSON, unified diff preview | Implemented | Human and agent-friendly browsing |
+| **P3 — MCP server** | 9 tools, 2 resources, 2 prompts, shared core with CLI | Implemented | Agents can create, inspect, and apply rollback |
+| **P4 — Operation log + replay** | op log, selective op revert, transcript-tail capture, replay | Implemented | Operation-aware rollback and reruns |
 
 ---
 
@@ -327,14 +326,17 @@ cp-0009     12m ago     Initial scaffolding              12   +340 -0   ★
 
 ---
 
-## 9. Open questions to answer before building P1
+## 9. Decisions answered while building P1-P4
 
-1. **Hook JSON stability** — openai/codex#16732 says `apply_patch` hook is unreliable. Do we (a) hooks + FS watcher (PRD §5 hybrid) or (b) `codex exec --json` stream consumer only?
-2. **Pin storage** — pinned checkpoints are persistent; do we cap at N pinned (e.g. 50)? Or unlimited?
-3. **Conversation capture** — does Codex's session JSONL include tool I/O we can replay? Or just the model transcript?
-4. **MCP server naming** — `agent-rollback` (matches CLI) or `codex-rollback` (matches the integration context)? Ship both?
-5. **MCP transport** — stdio only for v1, or do we also support SSE for remote Codex deployments?
-6. **License + npm scope** — keep as `agent-rollback` (matches the repo) or split `agent-rollback` (CLI) + `agent-rollback-mcp` (server)?
+1. **Hook JSON stability**: use documented Codex hooks for auto snapshots and
+   `run --event-stream` as a `codex exec --json` fallback.
+2. **Pin storage**: pinned checkpoints persist until explicitly unpinned or
+   pruned with `--no-keep-pinned`.
+3. **Conversation capture**: store a bounded transcript tail from
+   `transcript_path` when hooks provide it.
+4. **MCP server naming**: ship one stdio server named `agent-rollback`.
+5. **MCP transport**: stdio only for this roadmap pass.
+6. **License + npm scope**: keep the package and CLI as `agent-rollback`.
 
 ---
 

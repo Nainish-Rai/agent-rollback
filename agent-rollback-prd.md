@@ -86,7 +86,7 @@ $ agent-rollback revert cp-12            # restore workspace to start
 - **Performance for large codebases** — Codex works in single workspaces; assume <50k files. chokidar handles this fine.
 - **Multi-agent support** — Codex only for MVP. Adding Claude Code later requires ZERO refactor of the core.
 - **Cross-platform parity in MVP** — macOS first (where 80% of AI dev happens), Linux best-effort, Windows "doesn't crash."
-- **Beautiful UX** — CLI is enough. No TUI. No web UI.
+- **Beautiful UX** — CLI and terminal browser are enough. No web UI.
 - **Cloud sync, team features, RBAC** — explicitly anti-features for MVP.
 
 ### What matters vs. what doesn't
