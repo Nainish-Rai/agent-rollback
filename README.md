@@ -83,6 +83,7 @@ Diff two checkpoints:
 
 ```bash
 agent-rollback diff cp-before cp-after
+agent-rollback diff cp-before cp-after --patch
 ```
 
 Restore a checkpoint:
@@ -105,6 +106,9 @@ Browse checkpoints in the terminal:
 agent-rollback tui
 agent-rollback tui --query auth --no-input
 ```
+
+Inside interactive `tui`, `diff <n>` shows changed paths and a unified diff
+preview for the selected checkpoint.
 
 Inspect operation history and revert an operation to its prior checkpoint:
 

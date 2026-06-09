@@ -34,6 +34,8 @@ Implemented first-pass roadmap coverage:
 - **Selective operation revert**: `op revert` now reverts only paths touched by
   the operation, preserves unrelated later files, saves a safety checkpoint, and
   requires `--force` for conflicts.
+- **Unified diff previews**: `diff --patch` and interactive `tui` diff commands
+  show line-level unified diffs from checkpoint objects.
 - **Storage retention**: `prune` runs object garbage collection after deleting
   checkpoint manifests.
 - **Codex JSON fallback**: `run --event-stream` and `replay --event-stream`
@@ -43,7 +45,6 @@ Implemented first-pass roadmap coverage:
 Future UI polish:
 
 - Replace the lightweight terminal browser with full-screen Ink/fzf/delta UI.
-- Add richer line-level diff previews to the terminal browser.
 
 ---
 
