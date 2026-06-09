@@ -46,6 +46,7 @@ Run Codex with rollback checkpoints:
 
 ```bash
 agent-rollback run codex "refactor the auth module"
+agent-rollback run --event-stream codex "refactor the auth module"
 ```
 
 The wrapper executes:
@@ -60,6 +61,10 @@ Codex hooks installed by `init codex` create deduped auto-checkpoints for
 session start, user prompt, before tool use, and after tool use events. If Codex
 passes a transcript path, `agent-rollback` stores a bounded transcript tail in
 checkpoint metadata.
+
+`run --event-stream` adds Codex's `--json` flag and creates deduped fallback
+checkpoints from tool-like JSONL events. Use it when hooks are not installed or
+not trusted yet.
 
 List checkpoints:
 
@@ -105,8 +110,11 @@ Inspect operation history and revert an operation to its prior checkpoint:
 
 ```bash
 agent-rollback log
+agent-rollback op revert op-20260609-abcdef --dry-run
 agent-rollback op revert op-20260609-abcdef --yes
 ```
+
+Applied operation reverts create a safety checkpoint first.
 
 Replay Codex from a previous checkpoint:
 
@@ -141,6 +149,7 @@ The store lives in `.agent-rollback` by default:
 - `checkpoints/<id>/manifest.json` records paths, metadata, modes, and hashes.
 - `objects/<sha-prefix>/<sha>` stores content-addressed file blobs.
 - `ops.jsonl` stores an append-only operation log.
+- Pruning runs object garbage collection after deleting checkpoint manifests.
 - The scanner uses `git ls-files -co --exclude-standard` in Git repos, then falls
   back to a filesystem walk outside Git.
 
@@ -177,7 +186,8 @@ npm run check
 
 - No cloud sync.
 - TUI is a lightweight terminal browser, not a full-screen Ink app.
-- `op revert` restores the checkpoint before an operation; it is not yet a
-  patch-level selective revert that preserves all later edits.
+- `op revert` restores the checkpoint before an operation and saves a safety
+  checkpoint first; it is not yet a patch-level selective revert that preserves
+  all later edits.
 - No Windows-specific path behavior beyond Node's standard APIs.
 - Restore is file-content atomic per file, not a full workspace transaction.

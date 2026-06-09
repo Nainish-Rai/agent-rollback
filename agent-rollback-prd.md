@@ -16,6 +16,8 @@ Current implemented behavior:
 - Snapshot workspace before a Codex run.
 - Run `codex exec --sandbox workspace-write` unless the caller supplied sandbox
   flags.
+- Optionally run `codex exec --json` via `run --event-stream` and checkpoint
+  tool-like JSONL events.
 - Snapshot workspace after the run, even when Codex exits nonzero.
 - Install repo-local Codex hooks with `init codex` for session, prompt,
   pre-tool, and post-tool auto-checkpoints.
@@ -25,6 +27,8 @@ Current implemented behavior:
 - Store snapshots locally with content-addressed file blobs under
   `.agent-rollback`.
 - Store operation history in `.agent-rollback/ops.jsonl`.
+- Garbage-collect unreferenced content objects after pruning checkpoint
+  manifests.
 - Expose a stdio MCP server so agents can create, list, diff, pin, dry-run
   restore, apply restore, prune, search, and undo checkpoints.
 
