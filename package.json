@@ -4,7 +4,8 @@
   "description": "Git-like rollback checkpoints for Codex CLI runs.",
   "type": "module",
   "bin": {
-    "agent-rollback": "./bin/agent-rollback.js"
+    "agent-rollback": "./bin/agent-rollback.js",
+    "ar": "./bin/ar.js"
   },
   "files": [
     "AGENTS.md",
