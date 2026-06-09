@@ -1,5 +1,6 @@
 import readline from 'node:readline/promises';
 
+import { formatUnifiedDiff } from './diff.js';
 import { diffCheckpoints, listCheckpoints, pinCheckpoint, restoreCheckpoint } from './snapshot.js';
 import { UserError } from './errors.js';
 
@@ -97,6 +98,7 @@ async function runBrowserCommand({ answer, checkpoints, io, runtime }) {
     }
     const diff = await diffCheckpoints({ ...runtime, fromId: previous.id, toId: checkpoint.id });
     io.stdout.write(`${diff.map((entry) => `${entry.status}\t${entry.path}`).join('\n') || 'No changes.'}\n`);
+    io.stdout.write(await formatUnifiedDiff({ ...runtime, fromId: previous.id, toId: checkpoint.id }));
     return;
   }
 

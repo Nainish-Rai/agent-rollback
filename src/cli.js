@@ -1,5 +1,6 @@
 import path from 'node:path';
 
+import { formatUnifiedDiff } from './diff.js';
 import {
   collectGarbage,
   createCheckpoint,
@@ -136,14 +137,23 @@ export async function runCli(args, io = process) {
   }
 
   if (command === 'diff') {
-    const { positionalArgs, json } = parseCommandFlags(commandArgs);
+    const { patch, positionalArgs, json } = parseCommandFlags(commandArgs);
     const commandOptions = { ...options, json: options.json || json };
     const runtime = getRuntimeOptions(options);
     const fromId = requireArgument(positionalArgs[0], 'from checkpoint id is required');
     const toId = positionalArgs[1] || (await getLatestCheckpointId(runtime));
     const diff = await diffCheckpoints({ ...runtime, fromId, toId });
+    if (patch && !commandOptions.json) {
+      io.stdout.write(await formatUnifiedDiff({ ...runtime, fromId, toId }));
+      return;
+    }
     writeResult({
-      data: { diff, fromId, toId },
+      data: {
+        diff,
+        fromId,
+        patch: patch ? await formatUnifiedDiff({ ...runtime, fromId, toId }) : null,
+        toId,
+      },
       io,
       options: commandOptions,
       text: formatDiff(diff),
@@ -428,6 +438,7 @@ function parseCommandFlags(args) {
   let keepPinned = true;
   let noInput = false;
   let olderThan = null;
+  let patch = false;
   let query = '';
   let yes = false;
 
@@ -451,6 +462,10 @@ function parseCommandFlags(args) {
     }
     if (arg === '--no-input') {
       noInput = true;
+      continue;
+    }
+    if (arg === '--patch') {
+      patch = true;
       continue;
     }
     if (arg === '--keep-pinned') {
@@ -479,7 +494,7 @@ function parseCommandFlags(args) {
     positionalArgs.push(arg);
   }
 
-  return { dryRun, force, json, keepLast, keepPinned, noInput, olderThan, positionalArgs, query, yes };
+  return { dryRun, force, json, keepLast, keepPinned, noInput, olderThan, patch, positionalArgs, query, yes };
 }
 
 function parseRunCommandFlags(args) {

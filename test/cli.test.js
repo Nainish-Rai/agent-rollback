@@ -16,7 +16,15 @@ test('should create and restore checkpoints through the CLI', async () => {
     const firstCheckpointId = extractCheckpointId(first.stdoutText);
 
     await writeFile(path.join(workspaceRoot, 'index.txt'), 'two\n');
-    await runCli(['--cwd', workspaceRoot, 'checkpoint', 'second'], createMemoryIo());
+    const second = createMemoryIo();
+    await runCli(['--cwd', workspaceRoot, 'checkpoint', 'second'], second);
+    const secondCheckpointId = extractCheckpointId(second.stdoutText);
+
+    const patch = createMemoryIo();
+    await runCli(['--cwd', workspaceRoot, 'diff', firstCheckpointId, secondCheckpointId, '--patch'], patch);
+    assert.match(patch.stdoutText, /--- a\/index\.txt/);
+    assert.match(patch.stdoutText, /-one/);
+    assert.match(patch.stdoutText, /\+two/);
 
     const list = createMemoryIo();
     await runCli(['--cwd', workspaceRoot, 'list'], list);
