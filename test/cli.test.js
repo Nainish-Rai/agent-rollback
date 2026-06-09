@@ -80,6 +80,47 @@ test('should support JSON output, pin, prune, and undo workflows', async () => {
   }
 });
 
+test('should install Codex hooks and create deduped hook checkpoints', async () => {
+  const workspaceRoot = await mkdtemp(path.join(os.tmpdir(), 'agent-rollback-hooks-'));
+
+  try {
+    const installOutput = createMemoryIo();
+    await runCli(['--cwd', workspaceRoot, 'init', 'codex'], installOutput);
+
+    const hookConfig = JSON.parse(await readFile(path.join(workspaceRoot, '.codex', 'hooks.json'), 'utf8'));
+    assert.match(hookConfig.hooks.PostToolUse[0].hooks[0].command, /agent-rollback\.js" hook/);
+    assert.equal(hookConfig.hooks.PreToolUse[0].matcher, '*');
+
+    await writeFile(path.join(workspaceRoot, 'index.txt'), 'hooked\n');
+    const hookEvent = {
+      cwd: workspaceRoot,
+      hook_event_name: 'PostToolUse',
+      session_id: 'session-1',
+      tool_name: 'Bash',
+      tool_use_id: 'tool-1',
+      turn_id: 'turn-1',
+    };
+
+    await runCli(['--cwd', workspaceRoot, 'hook'], {
+      ...createMemoryIo(),
+      stdinText: JSON.stringify(hookEvent),
+    });
+    await runCli(['--cwd', workspaceRoot, 'hook'], {
+      ...createMemoryIo(),
+      stdinText: JSON.stringify(hookEvent),
+    });
+
+    const list = createMemoryIo();
+    await runCli(['--cwd', workspaceRoot, 'list', '--json'], list);
+    const checkpoints = JSON.parse(list.stdoutText).checkpoints;
+    assert.equal(checkpoints.length, 1);
+    assert.equal(checkpoints[0].metadata.source, 'codex-hook');
+    assert.equal(checkpoints[0].metadata.toolName, 'Bash');
+  } finally {
+    await rm(workspaceRoot, { recursive: true, force: true });
+  }
+});
+
 test('should wrap a Codex run with before and after checkpoints', async () => {
   const workspaceRoot = await mkdtemp(path.join(os.tmpdir(), 'agent-rollback-run-'));
   const fakeCodexPath = path.join(workspaceRoot, 'fake-codex.mjs');

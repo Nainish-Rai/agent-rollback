@@ -12,6 +12,7 @@ import {
   unpinCheckpoint,
 } from './snapshot.js';
 import { UserError } from './errors.js';
+import { handleCodexHook, installCodexHooks } from './hooks.js';
 import { runCodex } from './runner.js';
 
 const HELP_TEXT = `agent-rollback
@@ -20,6 +21,7 @@ Git-like rollback checkpoints for Codex CLI runs.
 
 Usage:
   agent-rollback init
+  agent-rollback init codex
   agent-rollback checkpoint [label]
   agent-rollback list
   agent-rollback show <checkpoint-id>
@@ -50,6 +52,17 @@ export async function runCli(args, io = process) {
 
   if (command === 'init') {
     const runtime = getRuntimeOptions(options);
+    if (commandArgs[0] === 'codex') {
+      const installation = await installCodexHooks(runtime);
+      writeResult({
+        data: installation,
+        io,
+        options,
+        text: `Installed Codex hooks at ${installation.hookConfigPath}\nRun /hooks in Codex to review and trust them.\n`,
+      });
+      return;
+    }
+
     await initializeStore(runtime);
     writeResult({
       data: { storeRoot: runtime.storeRoot, workspaceRoot: runtime.workspaceRoot },
@@ -57,6 +70,12 @@ export async function runCli(args, io = process) {
       options,
       text: `Initialized agent-rollback store at ${runtime.storeRoot}\n`,
     });
+    return;
+  }
+
+  if (command === 'hook') {
+    const event = await readHookEvent(io);
+    await handleCodexHook({ event, ...getRuntimeOptions(options) });
     return;
   }
 
@@ -392,6 +411,24 @@ function writeResult({ data, io, options, text }) {
   }
 
   io.stdout.write(text);
+}
+
+async function readHookEvent(io) {
+  if (typeof io.stdinText === 'string') {
+    return JSON.parse(io.stdinText || '{}');
+  }
+
+  if (!io.stdin) {
+    return {};
+  }
+
+  const chunks = [];
+  for await (const chunk of io.stdin) {
+    chunks.push(Buffer.from(chunk));
+  }
+
+  const input = Buffer.concat(chunks).toString('utf8').trim();
+  return input ? JSON.parse(input) : {};
 }
 
 async function getUndoTarget(runtime, count) {

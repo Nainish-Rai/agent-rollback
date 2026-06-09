@@ -17,7 +17,7 @@ import { listWorkspaceFiles, resolveWorkspacePath } from './workspace.js';
 
 const SCHEMA_VERSION = 1;
 
-export async function createCheckpoint({ workspaceRoot, storeRoot, metadata = {} }) {
+export async function createCheckpoint({ dedupe = false, workspaceRoot, storeRoot, metadata = {} }) {
   const resolvedWorkspaceRoot = path.resolve(requireValue(workspaceRoot, 'workspaceRoot is required'));
   const resolvedStoreRoot = path.resolve(
     storeRoot || path.join(resolvedWorkspaceRoot, '.agent-rollback'),
@@ -64,11 +64,18 @@ export async function createCheckpoint({ workspaceRoot, storeRoot, metadata = {}
     workspaceRoot: resolvedWorkspaceRoot,
   };
 
+  if (dedupe) {
+    const latestManifest = await readLatestCheckpoint(resolvedStoreRoot);
+    if (latestManifest?.stateHash === manifest.stateHash) {
+      return { ...summarizeCheckpoint(latestManifest), deduped: true };
+    }
+  }
+
   const checkpointDirectory = path.join(resolvedStoreRoot, 'checkpoints', manifest.id);
   await mkdir(checkpointDirectory, { recursive: true });
   await writeJsonAtomic(path.join(checkpointDirectory, 'manifest.json'), manifest);
 
-  return summarizeCheckpoint(manifest);
+  return { ...summarizeCheckpoint(manifest), deduped: false };
 }
 
 export async function initializeStore({ workspaceRoot, storeRoot }) {
@@ -256,6 +263,26 @@ async function readCheckpoint(storeRoot, checkpointId) {
   }
 
   return manifest;
+}
+
+async function readLatestCheckpoint(storeRoot) {
+  const checkpointRoot = path.join(path.resolve(storeRoot), 'checkpoints');
+  let checkpointIds;
+
+  try {
+    checkpointIds = await readdir(checkpointRoot);
+  } catch (error) {
+    if (error && error.code === 'ENOENT') {
+      return null;
+    }
+    throw error;
+  }
+
+  const checkpoints = await Promise.all(
+    checkpointIds.map((checkpointId) => readCheckpoint(storeRoot, checkpointId)),
+  );
+
+  return checkpoints.sort((left, right) => left.createdAt.localeCompare(right.createdAt)).at(-1) || null;
 }
 
 async function updateCheckpointMetadata({ storeRoot, checkpointId, updateMetadata }) {
