@@ -258,6 +258,58 @@ test('should wrap a Codex run with before and after checkpoints', async () => {
   }
 });
 
+test('should create checkpoints from Codex JSON event streams', async () => {
+  const workspaceRoot = await mkdtemp(path.join(os.tmpdir(), 'agent-rollback-events-'));
+  const fakeCodexPath = path.join(workspaceRoot, 'fake-codex-events.mjs');
+
+  try {
+    await writeFile(
+      fakeCodexPath,
+      [
+        '#!/usr/bin/env node',
+        'import { writeFileSync } from "node:fs";',
+        'import path from "node:path";',
+        'writeFileSync(path.join(process.cwd(), "event-output.txt"), process.argv.slice(2).join(" "));',
+        'console.log(JSON.stringify({ type: "tool_call.completed", item: { type: "tool_call" } }));',
+        '',
+      ].join('\n'),
+    );
+    await chmod(fakeCodexPath, 0o755);
+
+    const output = createMemoryIo();
+    await runCli(
+      [
+        '--cwd',
+        workspaceRoot,
+        'run',
+        '--event-stream',
+        '--json',
+        '--codex-bin',
+        fakeCodexPath,
+        'codex',
+        'event mode',
+      ],
+      output,
+    );
+    const result = JSON.parse(output.stdoutText);
+    assert.equal(result.exitCode, 0);
+    assert.equal(
+      await readFile(path.join(workspaceRoot, 'event-output.txt'), 'utf8'),
+      'exec --json --sandbox workspace-write event mode',
+    );
+
+    const list = createMemoryIo();
+    await runCli(['--cwd', workspaceRoot, 'list', '--json'], list);
+    const checkpoints = JSON.parse(list.stdoutText).checkpoints;
+    assert.equal(
+      checkpoints.some((checkpoint) => checkpoint.metadata.source === 'codex-json-event'),
+      true,
+    );
+  } finally {
+    await rm(workspaceRoot, { recursive: true, force: true });
+  }
+});
+
 function createMemoryIo() {
   const output = { stderr: '', stdout: '' };
 

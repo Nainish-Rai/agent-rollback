@@ -3,9 +3,10 @@ import { spawn } from 'node:child_process';
 import { UserError } from './errors.js';
 import { createCheckpoint } from './snapshot.js';
 
-export async function runCodex({ args, io = process, storeRoot, workspaceRoot }) {
+export async function runCodex({ args, eventStream = false, io = process, storeRoot, workspaceRoot }) {
   const { codexBin, codexArgs } = parseRunArgs(args);
-  const commandForMetadata = [codexBin, ...codexArgs].join(' ');
+  const finalCodexArgs = eventStream ? ensureCodexJsonArgs(codexArgs) : codexArgs;
+  const commandForMetadata = [codexBin, ...finalCodexArgs].join(' ');
 
   const before = await createCheckpoint({
     workspaceRoot,
@@ -22,9 +23,17 @@ export async function runCodex({ args, io = process, storeRoot, workspaceRoot })
 
   try {
     exitCode = await spawnCommand({
-      args: codexArgs,
+      args: finalCodexArgs,
       command: codexBin,
       cwd: workspaceRoot,
+      onJsonEvent: eventStream
+        ? (event) =>
+            createEventCheckpoint({
+              event,
+              storeRoot,
+              workspaceRoot,
+            })
+        : null,
       io,
     });
   } finally {
@@ -50,6 +59,18 @@ export function buildCodexExecArgs(args) {
   }
 
   return ['exec', '--sandbox', 'workspace-write', ...codexArgs.slice(1)];
+}
+
+export function ensureCodexJsonArgs(args) {
+  if (args.includes('--json')) {
+    return args;
+  }
+
+  if (args[0] === 'exec') {
+    return ['exec', '--json', ...args.slice(1)];
+  }
+
+  return ['--json', ...args];
 }
 
 function parseRunArgs(args) {
@@ -96,8 +117,42 @@ function hasSandboxOption(args) {
   );
 }
 
-function spawnCommand({ args, command, cwd, io }) {
+async function createEventCheckpoint({ event, storeRoot, workspaceRoot }) {
+  if (!shouldCheckpointEvent(event)) {
+    return null;
+  }
+
+  return createCheckpoint({
+    dedupe: true,
+    storeRoot,
+    workspaceRoot,
+    metadata: {
+      eventType: event.type || event.event || '',
+      itemType: event.item?.type || '',
+      source: 'codex-json-event',
+    },
+  });
+}
+
+function shouldCheckpointEvent(event) {
+  const eventText = JSON.stringify({
+    event: event.event || '',
+    itemType: event.item?.type || '',
+    kind: event.kind || '',
+    type: event.type || '',
+  }).toLowerCase();
+  return eventText.includes('tool') || eventText.includes('exec') || eventText.includes('patch');
+}
+
+function spawnCommand({ args, command, cwd, io, onJsonEvent = null }) {
   return new Promise((resolve, reject) => {
+    const pendingJsonEvents = [];
+    let stdoutBuffer = '';
+    const trackJsonEvent = onJsonEvent
+      ? (event) => {
+          pendingJsonEvents.push(Promise.resolve(onJsonEvent(event)));
+        }
+      : null;
     const child = spawn(command, args, {
       cwd,
       env: process.env,
@@ -110,13 +165,24 @@ function spawnCommand({ args, command, cwd, io }) {
 
     child.stdout.on('data', (chunk) => {
       io.stdout.write(chunk);
+      if (trackJsonEvent) {
+        stdoutBuffer = parseJsonLines({
+          chunk: chunk.toString('utf8'),
+          onJsonEvent: trackJsonEvent,
+          previousBuffer: stdoutBuffer,
+        });
+      }
     });
 
     child.stderr.on('data', (chunk) => {
       io.stderr.write(chunk);
     });
 
-    child.on('close', (code, signal) => {
+    child.on('close', async (code, signal) => {
+      if (trackJsonEvent && stdoutBuffer.trim()) {
+        parseJsonLine(stdoutBuffer, trackJsonEvent);
+      }
+      await Promise.all(pendingJsonEvents);
       if (signal) {
         resolve(1);
         return;
@@ -124,4 +190,29 @@ function spawnCommand({ args, command, cwd, io }) {
       resolve(code ?? 1);
     });
   });
+}
+
+function parseJsonLines({ chunk, onJsonEvent, previousBuffer }) {
+  const lines = `${previousBuffer}${chunk}`.split('\n');
+  const incompleteLine = lines.pop() || '';
+
+  for (const line of lines) {
+    parseJsonLine(line, onJsonEvent);
+  }
+
+  return incompleteLine;
+}
+
+function parseJsonLine(line, onJsonEvent) {
+  const trimmedLine = line.trim();
+  if (!trimmedLine) {
+    return;
+  }
+
+  try {
+    const event = JSON.parse(trimmedLine);
+    void onJsonEvent(event);
+  } catch {
+    // Codex may print non-JSON diagnostics even in JSON mode; ignore them.
+  }
 }

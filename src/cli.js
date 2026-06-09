@@ -37,11 +37,11 @@ Usage:
   agent-rollback undo [count] --yes
   agent-rollback log
   agent-rollback op revert <operation-id> --yes
-  agent-rollback replay <checkpoint-id> --yes codex <prompt-or-codex-args...>
+  agent-rollback replay <checkpoint-id> --yes [--event-stream] codex <prompt-or-codex-args...>
   agent-rollback tui [--query <text>] [--no-input]
   agent-rollback mcp
   agent-rollback revert <checkpoint-id> --yes
-  agent-rollback run [--codex-bin <path>] codex <prompt-or-codex-args...>
+  agent-rollback run [--event-stream] [--codex-bin <path>] codex <prompt-or-codex-args...>
 
 Options:
   --cwd <dir>          Workspace directory. Defaults to the current directory.
@@ -268,6 +268,7 @@ export async function runCli(args, io = process) {
     const result = await replayFromCheckpoint({
       args: replayArgs.args,
       checkpointId: replayArgs.checkpointId,
+      eventStream: replayArgs.eventStream,
       force: options.yes || replayArgs.yes,
       io: outputAsJson ? { stderr: io.stderr, stdout: io.stderr } : io,
       runtime: getRuntimeOptions(options),
@@ -330,6 +331,7 @@ export async function runCli(args, io = process) {
     const outputAsJson = options.json || runFlags.json;
     const result = await runCodex({
       args: runFlags.args,
+      eventStream: runFlags.eventStream,
       io: outputAsJson ? { stderr: io.stderr, stdout: io.stderr } : io,
       ...getRuntimeOptions(options),
     });
@@ -455,6 +457,7 @@ function parseCommandFlags(args) {
 
 function parseRunCommandFlags(args) {
   const runArgs = [];
+  let eventStream = false;
   let json = false;
 
   for (let index = 0; index < args.length; index += 1) {
@@ -463,17 +466,22 @@ function parseRunCommandFlags(args) {
       json = true;
       continue;
     }
+    if (arg === '--event-stream' && runArgs.length === 0) {
+      eventStream = true;
+      continue;
+    }
 
     runArgs.push(...args.slice(index));
     break;
   }
 
-  return { args: runArgs, json };
+  return { args: runArgs, eventStream, json };
 }
 
 function parseReplayArgs(args) {
   const checkpointId = requireArgument(args[0], 'checkpoint id is required');
   const replayArgs = [];
+  let eventStream = false;
   let json = false;
   let yes = false;
 
@@ -487,11 +495,15 @@ function parseReplayArgs(args) {
       json = true;
       continue;
     }
+    if (arg === '--event-stream') {
+      eventStream = true;
+      continue;
+    }
     replayArgs.push(...args.slice(index));
     break;
   }
 
-  return { args: replayArgs, checkpointId, json, yes };
+  return { args: replayArgs, checkpointId, eventStream, json, yes };
 }
 
 function getRuntimeOptions(options) {
