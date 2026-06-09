@@ -17,7 +17,7 @@
   },
   "scripts": {
     "test": "node --test",
-    "check": "node --check bin/agent-rollback.js && node --check src/cli.js"
+    "check": "find bin src test -name '*.js' -print0 | xargs -0 -n1 node --check"
   },
   "keywords": [
     "codex",
