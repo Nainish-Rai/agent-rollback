@@ -21,7 +21,8 @@
   },
   "scripts": {
     "test": "node --test",
-    "check": "find bin src test -name '*.js' -print0 | xargs -0 -n1 node --check"
+    "check": "find bin src test -name '*.js' -print0 | xargs -0 -n1 node --check",
+    "prepublishOnly": "npm run check && npm test"
   },
   "keywords": [
     "codex",
