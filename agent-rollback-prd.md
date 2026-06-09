@@ -2,6 +2,34 @@
 
 > **Design philosophy applied**: Every section below fights complexity by investing design effort where it's touched most (the hook hot path), hiding information aggressively, and treating non-essentials as non-essentials.
 
+## 0. Implementation Note: Shipped MVP
+
+The first working MVP uses the official Codex CLI automation surface:
+`codex exec`. The original hook-heavy design below remains the product
+direction, but public Codex docs currently document `codex exec`, sandbox flags,
+and Git-repo safety checks as the stable automation path. A wrapper around
+`codex exec` gives users the core rollback value today without depending on an
+undocumented hook JSON contract.
+
+Current MVP behavior:
+
+- Snapshot workspace before a Codex run.
+- Run `codex exec --sandbox workspace-write` unless the caller supplied sandbox
+  flags.
+- Snapshot workspace after the run, even when Codex exits nonzero.
+- Provide `init`, `checkpoint`, `list`, `show`, `diff`, `revert`, and `run`.
+- Store snapshots locally with content-addressed file blobs under
+  `.agent-rollback`.
+
+Reference docs checked on June 9, 2026:
+
+- OpenAI Codex CLI: https://developers.openai.com/codex/cli
+- OpenAI Codex non-interactive mode: https://developers.openai.com/codex/noninteractive
+- OpenAI Codex best practices: https://developers.openai.com/codex/learn/best-practices
+- OpenAI Codex GitHub repo: https://github.com/openai/codex
+- Git restore/reset/revert docs: https://git-scm.com/docs/git-restore,
+  https://git-scm.com/docs/git-reset, https://git-scm.com/docs/git-revert
+
 ---
 
 ## 1. Mission
