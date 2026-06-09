@@ -1,6 +1,6 @@
 {
   "name": "agent-rollback",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Git-like rollback checkpoints for Codex CLI runs.",
   "type": "module",
   "bin": {
