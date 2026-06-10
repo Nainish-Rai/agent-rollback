@@ -28,7 +28,30 @@ A SKILL.md ships in the package at `skills/agent-rollback/SKILL.md`. It teaches
 AI agents (Codex CLI, Claude Code, Cursor, Gemini CLI) how to use both the MCP
 server and the `ar` CLI.
 
-Install it for the agent you use:
+**One-line install** (works for 18+ agents — Codex, Claude Code, Cursor, Windsurf,
+Copilot, Cline, Gemini CLI, and more):
+
+```bash
+npx skills add Nainish-Rai/agent-rollback --skill agent-rollback -g -y
+```
+
+Manage afterwards with:
+
+```bash
+npx skills list                 # what's installed
+npx skills find "rollback"      # discover more
+npx skills update               # pull latest
+npx skills remove agent-rollback
+```
+
+After install the skill is listed in the agent's slash menu and triggers
+automatically on rollback / undo / revert / restore / "what changed" /
+"I broke something" phrases without you naming the tool.
+
+The skill is also discoverable on [skills.sh](https://skills.sh) — install
+telemetry seeds the directory listing once at least one user installs it.
+
+**Manual install** (after `npm install -g agent-rollback`):
 
 ```bash
 # Codex CLI
@@ -101,7 +124,7 @@ agent-rollback list --json
 Show a checkpoint manifest:
 
 ```bash
-agent-rollback show cp-20260609-120000-ab12cd
+agent-rollback show cp-183544-before-refactor-ed96
 ```
 
 Diff two checkpoints:
