@@ -1,0 +1,44 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    name: Test on Node ${{ matrix.node-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [20, 22]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+      - name: Install
+        run: npm ci || npm install
+      - name: Check
+        run: npm run check
+      - name: Test
+        run: npm test
+
+  lint:
+    name: Lint + package sanity
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+      - run: npm install
+      - name: Verify install script syntax
+        run: bash -n scripts/install.sh
+      - name: Dry-run install script
+        run: bash scripts/install.sh --dry-run --all
+      - name: Verify JSON files
+        run: node -e "JSON.parse(require('fs').readFileSync('package.json'))" && node -e "JSON.parse(require('fs').readFileSync('schema.json'))"

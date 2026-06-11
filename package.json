@@ -1,7 +1,7 @@
 {
   "name": "agent-rollback",
   "version": "1.0.1",
-  "description": "Git-like undo and rollback checkpoints for OpenAI Codex CLI. Snapshot, diff, and restore files before and after Codex edits. MCP server + Codex hooks for automatic safety net. Works with Claude Code, Cursor, Windsurf, Copilot, Cline, Gemini CLI.",
+  "description": "Git-like undo, revert, and rollback checkpoints for OpenAI Codex CLI. MCP server + hooks snapshot every edit. Restore in one cmd. Free, MIT licensed.",
   "type": "module",
   "bin": {
     "agent-rollback": "./bin/agent-rollback.js",
@@ -13,15 +13,24 @@
     "type": "git",
     "url": "git+https://github.com/Nainish-Rai/agent-rollback.git"
   },
+  "funding": {
+    "type": "github",
+    "url": "https://github.com/sponsors/Nainish-Rai"
+  },
   "files": [
     "AGENTS.md",
     "bin",
     "roadmap.md",
+    "schema.json",
     "scripts",
     "skills",
     "src",
     "README.md",
-    "agent-rollback-prd.md"
+    "agent-rollback-prd.md",
+    "CODE_OF_CONDUCT.md",
+    "CONTRIBUTING.md",
+    "SECURITY.md",
+    "CITATION.cff"
   ],
   "engines": {
     "node": ">=20"
@@ -32,22 +41,33 @@
     "prepublishOnly": "npm run check && npm test"
   },
   "keywords": [
-    "codex",
-    "codex-cli",
-    "openai-codex",
-    "codex-mcp",
+    "agent-rollback",
     "codex-undo",
     "codex-revert",
     "codex-checkpoint",
     "codex-rollback",
     "codex-snapshot",
-    "codex-safety-net",
     "codex-backup",
+    "codex-safety-net",
+    "codex-mcp",
+    "codex-restore",
+    "codex-diff",
+    "codex-file-history",
+    "openai-codex",
+    "codex-cli",
+    "ai-rollback",
+    "agent-snapshot",
+    "ai-undo",
+    "ai-revert",
+    "ai-checkpoint",
+    "ai-safety-net",
+    "mcp-server",
+    "codex",
+    "rollback",
+    "checkpoint",
     "undo",
     "revert",
-    "rollback",
     "restore",
-    "checkpoint",
     "snapshot",
     "diff",
     "workspace-snapshot",
@@ -58,7 +78,6 @@
     "agent",
     "cli",
     "mcp",
-    "mcp-server",
     "model-context-protocol",
     "claude-code",
     "cursor",

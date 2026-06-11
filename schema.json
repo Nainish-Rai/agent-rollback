@@ -1,0 +1,277 @@
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://github.com/Nainish-Rai#organization",
+      "name": "Nainish Rai",
+      "alternateName": "nainish-rai",
+      "url": "https://github.com/Nainish-Rai",
+      "logo": "https://github.com/Nainish-Rai.png",
+      "sameAs": [
+        "https://github.com/Nainish-Rai",
+        "https://www.npmjs.com/~nainish-rai"
+      ],
+      "knowsAbout": [
+        "OpenAI Codex CLI",
+        "Model Context Protocol",
+        "AI agent safety",
+        "Developer tools",
+        "Snapshot and rollback systems",
+        "Content-addressed storage"
+      ],
+      "founder": {
+        "@type": "Person",
+        "name": "Nainish Rai",
+        "url": "https://github.com/Nainish-Rai"
+      }
+    },
+    {
+      "@type": "SoftwareApplication",
+      "@id": "https://www.npmjs.com/package/agent-rollback#software",
+      "name": "agent-rollback",
+      "alternateName": ["arb", "agentrollback"],
+      "description": "Git-like undo, revert, and rollback checkpoints for OpenAI Codex CLI. MCP server + hooks snapshot every edit. Restore in one cmd. Free, MIT licensed.",
+      "url": "https://www.npmjs.com/package/agent-rollback",
+      "downloadUrl": "https://registry.npmjs.org/agent-rollback/-/agent-rollback-1.0.1.tgz",
+      "softwareVersion": "1.0.1",
+      "datePublished": "2026-06-11",
+      "dateModified": "2026-06-11",
+      "applicationCategory": "DeveloperApplication",
+      "applicationSubCategory": "AI Agent Safety Net / Snapshot Tool",
+      "operatingSystem": ["macOS", "Linux", "Windows (via WSL)"],
+      "programmingLanguage": "JavaScript",
+      "runtimePlatform": "Node.js >= 20",
+      "license": "https://opensource.org/licenses/MIT",
+      "isAccessibleForFree": true,
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD",
+        "availability": "https://schema.org/InStock"
+      },
+      "author": {
+        "@type": "Person",
+        "@id": "https://github.com/Nainish-Rai#organization",
+        "name": "Nainish Rai",
+        "alternateName": "nainish-rai",
+        "url": "https://github.com/Nainish-Rai"
+      },
+      "publisher": {
+        "@type": "Person",
+        "@id": "https://github.com/Nainish-Rai#organization",
+        "name": "Nainish Rai",
+        "url": "https://github.com/Nainish-Rai"
+      },
+      "maintainer": {
+        "@type": "Person",
+        "@id": "https://github.com/Nainish-Rai#organization",
+        "name": "Nainish Rai",
+        "alternateName": "nainish-rai",
+        "url": "https://github.com/Nainish-Rai"
+      },
+      "codeRepository": "https://github.com/Nainish-Rai/agent-rollback",
+      "softwareRequirements": "Node.js >= 20",
+      "featureList": [
+        "CLI (agent-rollback / short alias arb)",
+        "MCP stdio server for Codex, Claude Code, Cursor",
+        "Codex hooks for auto-checkpoints on every prompt and tool use",
+        "Content-addressed snapshots with ~zero disk overhead",
+        "Operation-level undo via append-only ops.jsonl",
+        "Terminal browser (TUI) with diff preview",
+        "100% local — no telemetry, no cloud sync"
+      ],
+      "keywords": "codex undo, codex revert, codex checkpoint, codex rollback, agent snapshot layer, codex mcp, codex safety net, claude code undo"
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "@id": "https://github.com/Nainish-Rai/agent-rollback#source",
+      "name": "agent-rollback",
+      "description": "Git-like undo, revert, and rollback checkpoints for OpenAI Codex CLI. The agent snapshot layer.",
+      "url": "https://github.com/Nainish-Rai/agent-rollback",
+      "codeRepository": "https://github.com/Nainish-Rai/agent-rollback",
+      "programmingLanguage": {
+        "@type": "ComputerLanguage",
+        "name": "JavaScript",
+        "version": "ESM (Node.js >= 20)"
+      },
+      "runtimePlatform": "Node.js >= 20",
+      "license": "https://opensource.org/licenses/MIT",
+      "author": {
+        "@type": "Person",
+        "@id": "https://github.com/Nainish-Rai#organization",
+        "name": "Nainish Rai",
+        "url": "https://github.com/Nainish-Rai"
+      },
+      "contributor": {
+        "@type": "Person",
+        "@id": "https://github.com/Nainish-Rai#organization",
+        "name": "Nainish Rai"
+      },
+      "dateCreated": "2026-06-11",
+      "dateModified": "2026-06-11",
+      "version": "1.0.1"
+    },
+    {
+      "@type": "TechArticle",
+      "@id": "https://github.com/Nainish-Rai/agent-rollback#readme",
+      "headline": "agent-rollback: The Undo Button for OpenAI Codex CLI",
+      "description": "A CLI, MCP server, and Codex hook that captures content-addressed snapshots of your workspace so you can undo, revert, rollback, and checkpoint any Codex change in one command.",
+      "author": {
+        "@type": "Person",
+        "@id": "https://github.com/Nainish-Rai#organization",
+        "name": "Nainish Rai",
+        "url": "https://github.com/Nainish-Rai"
+      },
+      "publisher": {
+        "@type": "Person",
+        "@id": "https://github.com/Nainish-Rai#organization",
+        "name": "Nainish Rai"
+      },
+      "datePublished": "2026-06-11",
+      "dateModified": "2026-06-11",
+      "proficiencyLevel": "Intermediate",
+      "dependencies": "Node.js >= 20",
+      "keywords": "codex undo, codex revert, codex checkpoint, codex rollback, agent snapshot layer, codex mcp"
+    },
+    {
+      "@type": "FAQPage",
+      "@id": "https://github.com/Nainish-Rai/agent-rollback#faq",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "How do I undo a Codex change?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Run `agent-rollback list` (or short alias `arb list`), find the checkpoint taken before the bad edit, then `agent-rollback revert cp-<id> --yes`. With Codex hooks installed (`agent-rollback init codex`), Codex auto-snapshots before every prompt and tool use, so there's always a checkpoint to roll back to."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How do I revert just one bad Codex operation, not the whole workspace?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Use the operation log: `agent-rollback log` lists recent operations, and `agent-rollback op revert op-<id> --yes` reverts exactly that operation and leaves later unrelated edits alone. A safety checkpoint is created first, so it's always undoable."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How do I undo the last Codex edit (or the last N edits)?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Use `agent-rollback undo N --yes` to undo the last N checkpoints. Each undo creates a safety checkpoint automatically so the undo itself is undoable."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How do I diff what Codex changed?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Use `agent-rollback diff cp-before cp-after` for changed paths plus a summary, or `agent-rollback diff cp-before cp-after --patch` for a full unified diff. From a Codex chat, just say 'what changed between the auth checkpoint and now?'."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How do I add a safety net so every Codex run is auto-rolled-back-able?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Install Codex hooks once per repo with `agent-rollback init codex`. Run `/hooks` inside Codex to trust the generated repo-local hooks. From then on, every session start, user prompt, before-tool-use, and after-tool-use event creates a deduped auto-checkpoint."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Does it work with Claude Code, Cursor, Windsurf, Copilot, Cline, or Gemini CLI?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. The CLI works anywhere. Install the agent skill globally for 18+ agents with `npx skills add Nainish-Rai/agent-rollback --skill agent-rollback -g -y`. The MCP server is registered automatically for Codex CLI on install with `--with-mcp`."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How is this different from git stash, git restore, or git reset?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "agent-rollback works in any directory (not just Git repos), auto-snapshots on every Codex prompt and tool use, supports operation-level undo via an append-only ops log, and exposes an MCP server + SKILL.md so any AI agent can call it. It is the agent-native complement to Git, not a replacement."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is my data sent anywhere?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No. Everything lives in `.agent-rollback/` inside your project (or wherever `--store` points). There is no telemetry, no cloud sync, no analytics. The CLI and MCP server are 100% local."
+          }
+        }
+      ]
+    },
+    {
+      "@type": "HowTo",
+      "@id": "https://github.com/Nainish-Rai/agent-rollback#howto",
+      "name": "How to undo a Codex change with agent-rollback",
+      "description": "Install agent-rollback, initialize a repo, create a checkpoint, then restore it when Codex goes off track.",
+      "totalTime": "PT30S",
+      "tool": [
+        { "@type": "HowToTool", "name": "agent-rollback" },
+        { "@type": "HowToTool", "name": "arb" }
+      ],
+      "step": [
+        {
+          "@type": "HowToStep",
+          "position": 1,
+          "name": "Install",
+          "text": "Run `curl -fsSL https://raw.githubusercontent.com/Nainish-Rai/agent-rollback/main/scripts/install.sh | bash -s -- --all` (or `npm install -g agent-rollback` for the binary only)."
+        },
+        {
+          "@type": "HowToStep",
+          "position": 2,
+          "name": "Initialize",
+          "text": "Inside your repo, run `agent-rollback init` (or `arb init`). This creates `.agent-rollback/` in the project."
+        },
+        {
+          "@type": "HowToStep",
+          "position": 3,
+          "name": "Checkpoint + do something risky",
+          "text": "From a Codex chat: 'make a checkpoint called green tests and refactor the auth module'. Or from the CLI: `agent-rollback checkpoint 'green tests'` then `agent-rollback run codex 'refactor the auth module'`."
+        },
+        {
+          "@type": "HowToStep",
+          "position": 4,
+          "name": "Browse checkpoints",
+          "text": "From Codex: 'show me checkpoints'. From the CLI: `agent-rollback list` or `agent-rollback tui` for the interactive browser."
+        },
+        {
+          "@type": "HowToStep",
+          "position": 5,
+          "name": "Roll back when something goes wrong",
+          "text": "From Codex: 'go to the last checkpoint'. From the CLI: `agent-rollback revert cp-<id> --yes` or `agent-rollback undo 1 --yes`. A safety checkpoint is created automatically."
+        },
+        {
+          "@type": "HowToStep",
+          "position": 6,
+          "name": "See what changed",
+          "text": "From Codex: 'what did the refactor change vs the green tests checkpoint?'. From the CLI: `agent-rollback diff cp-before cp-after` or `agent-rollback diff cp-before cp-after --patch`."
+        },
+        {
+          "@type": "HowToStep",
+          "position": 7,
+          "name": "Optional: add a permanent safety net",
+          "text": "Run `agent-rollback init codex` once per repo, then `/hooks` inside Codex to trust the auto-snapshot hooks. Every prompt and tool use now creates a deduped auto-checkpoint."
+        }
+      ]
+    },
+    {
+      "@type": "BreadcrumbList",
+      "@id": "https://github.com/Nainish-Rai/agent-rollback#breadcrumb",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://github.com/Nainish-Rai/agent-rollback" },
+        { "@type": "ListItem", "position": 2, "name": "30-second start", "item": "https://github.com/Nainish-Rai/agent-rollback#30-second-start" },
+        { "@type": "ListItem", "position": 3, "name": "Why", "item": "https://github.com/Nainish-Rai/agent-rollback#why" },
+        { "@type": "ListItem", "position": 4, "name": "Install", "item": "https://github.com/Nainish-Rai/agent-rollback#install" },
+        { "@type": "ListItem", "position": 5, "name": "AI agent skill", "item": "https://github.com/Nainish-Rai/agent-rollback#ai-agent-skill" },
+        { "@type": "ListItem", "position": 6, "name": "Usage", "item": "https://github.com/Nainish-Rai/agent-rollback#usage" },
+        { "@type": "ListItem", "position": 7, "name": "Storage model", "item": "https://github.com/Nainish-Rai/agent-rollback#storage-model" },
+        { "@type": "ListItem", "position": 8, "name": "FAQ", "item": "https://github.com/Nainish-Rai/agent-rollback#faq--codex-undo-revert-and-rollback" }
+      ]
+    }
+  ]
+}

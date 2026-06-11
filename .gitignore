@@ -2,3 +2,9 @@
 coverage/
 node_modules/
 npm-debug.log*
+.DS_Store
+a.txt
+progress.md
+skills-lock.json
+.research/
+skills/

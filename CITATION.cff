@@ -1,0 +1,59 @@
+cff-version: 1.2.0
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+title: agent-rollback
+abstract: >-
+  Git-like undo, revert, and rollback checkpoints for OpenAI
+  Codex CLI. The agent snapshot layer. A CLI, MCP server, and
+  Codex hook that captures content-addressed snapshots of your
+  workspace so you can restore any file — or the whole project
+  — in one command.
+keywords:
+  - codex
+  - codex-undo
+  - codex-revert
+  - codex-checkpoint
+  - codex-rollback
+  - agent-snapshot-layer
+  - codex-safety-net
+  - codex-mcp
+  - mcp-server
+  - snapshot
+  - rollback
+  - undo
+  - ai-agent
+  - openai-codex
+license: MIT
+version: 1.0.1
+date-released: 2026-06-11
+url: https://github.com/Nainish-Rai/agent-rollback
+repository-code: https://github.com/Nainish-Rai/agent-rollback
+repository: https://github.com/Nainish-Rai/agent-rollback/issues
+authors:
+  - family-names: Rai
+    given-names: Nainish
+    alias: nainish-rai
+    affiliation: Nainish-Rai
+    orcid: ''
+contact:
+  - family-names: Rai
+    given-names: Nainish
+    email: nraibackup1@gmail.com
+  - name: GitHub Issues
+    url: https://github.com/Nainish-Rai/agent-rollback/issues
+preferred-citation:
+  type: software
+  title: agent-rollback
+  version: 1.0.1
+  url: https://github.com/Nainish-Rai/agent-rollback
+  year: 2026
+  authors:
+    - family-names: Rai
+      given-names: Nainish
+      alias: nainish-rai
+  publisher: ''
+  identifiers:
+    - type: url
+      value: https://www.npmjs.com/package/agent-rollback
