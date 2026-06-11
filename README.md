@@ -69,7 +69,7 @@ agents. Verify it worked:
 
 ```bash
 agent-rollback --help   # see all subcommands
-ar --help               # short alias works the same way
+arb --help              # short alias (3 chars)
 ```
 
 If you'd rather use npm only (no MCP, no skill), drop the `--all` flag —
@@ -247,8 +247,18 @@ curl -fsSL https://raw.githubusercontent.com/Nainish-Rai/agent-rollback/main/scr
 npm install -g agent-rollback
 ```
 
-Requires **Node.js >= 20**. Both `agent-rollback` and `ar` (short alias)
-are added to your `PATH`.
+Requires **Node.js >= 20**. Adds `agent-rollback` and `arb` (short alias)
+to your `PATH`.
+
+> **Why `arb` and not `ar`?**
+>
+> `ar` is the BSD/GNU archive tool that ships with every Unix-like
+> system at `/usr/bin/ar`. On any shell where `/usr/bin` is searched
+> before npm's global bin (cloud shells, cron, some terminal emulators,
+> shells launched without nvm initialized), the system `ar` shadows our
+> binary and `ar --help` shows the archive tool's usage instead of ours.
+> `arb` (agent-rollback) is a 3-char name that doesn't collide with
+> anything. The installer detects the shadow and prints a note.
 
 ### 3. From source
 
@@ -256,7 +266,7 @@ are added to your `PATH`.
 git clone https://github.com/Nainish-Rai/agent-rollback.git
 cd agent-rollback
 npm install
-npm link        # exposes `agent-rollback` / `ar` globally
+npm link        # exposes `agent-rollback` / `arb` globally
 ```
 
 Or run it directly without linking:
@@ -647,7 +657,7 @@ npm run prepublishOnly   # = npm run check && npm test
 Project layout:
 
 ```text
-bin/           # agent-rollback.js, ar.js (short alias)
+bin/           # agent-rollback.js, arb.js (short alias; arb = agent-rollback)
 src/           # cli.js, snapshot.js, runner.js, mcp.js, hooks.js, ...
 skills/        # SKILL.md shipped to npm consumers
 test/          # *.test.js — node --test
@@ -782,6 +792,40 @@ npx skills remove agent-rollback -g -y
 ```
 
 The store directory (`.agent-rollback/`) is yours to keep or delete.
+
+### Why is the short alias `arb` and not `ar`?
+
+Because `ar` is already taken on every Unix system. The BSD/GNU `ar`
+archive tool lives at `/usr/bin/ar` on macOS and Linux, and on any shell
+where `/usr/bin` is searched before npm's global bin, our old short alias
+got shadowed — `ar --help` would print the archive tool's usage instead
+of ours.
+
+`arb` is the same 3-letter feel, doesn't collide with anything, and the
+installer detects the shadow and prints a one-line note if you happen to
+be in a shell where the system `ar` would win.
+
+If you've been using `ar` from a previous install, run a quick check:
+
+```bash
+type ar    # should report /usr/bin/ar (the system archive tool)
+type arb   # should report /Users/<you>/.nvm/.../bin/arb (our binary)
+```
+
+If you want a one-letter-ish alias of your own, drop this in your
+`~/.zshrc` or `~/.bashrc`:
+
+```bash
+alias rbk='agent-rollback'   # or 'arb' if you prefer
+```
+
+### I upgraded from a previous version and `ar` no longer works — what now?
+
+The 0.2.0 release renamed the short alias from `ar` to `arb` to fix the
+system-tool shadow. Just use `arb` (or the full `agent-rollback`) from
+now on. If you have old muscle memory for `ar`, see the alias snippet
+above. The full `agent-rollback` name has always worked and continues to
+work.
 
 ## Current boundaries
 

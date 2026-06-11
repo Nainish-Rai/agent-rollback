@@ -263,15 +263,34 @@ fi
 info "Installing ${INSTALL_SPEC} globally with npm..."
 run npm install -g "$INSTALL_SPEC"
 
-# Verify by invoking the binary. We try both names since both are in package.json#bin.
+# Verify by invoking the binary. We check `agent-rollback` first, then `arb`
+# (the 3-char short alias). We deliberately do NOT use `ar` because it collides
+# with the BSD/GNU `ar` archive tool on every Unix system; if `ar` resolves to
+# /usr/bin/ar on your PATH, the system tool wins and our binary is shadowed.
 if command -v agent-rollback >/dev/null 2>&1; then
   ok "agent-rollback ready: $(agent-rollback --version 2>/dev/null || echo installed)"
-elif command -v ar >/dev/null 2>&1; then
-  ok "ar (short alias) ready: $(ar --version 2>/dev/null || echo installed)"
+elif command -v arb >/dev/null 2>&1; then
+  ok "arb (short alias) ready: $(arb --version 2>/dev/null || echo installed)"
 else
   warn "npm install finished but the binary is not on PATH."
   warn "Your global npm bin directory is likely: $(npm bin -g 2>/dev/null || npm root -g)"
   warn "Add it to your shell PATH if it isn't already."
+fi
+
+# Detect a shadowed `ar` (system BSD/GNU archive tool beating our old short
+# alias in PATH order). This is informational only; we don't write to PATH.
+if command -v ar >/dev/null 2>&1; then
+  ar_path="$(command -v ar)"
+  if [ "$ar_path" != "$(npm root -g 2>/dev/null)/../bin/ar" ] \
+     && [ "$ar_path" != "$(command -v agent-rollback 2>/dev/null | xargs dirname 2>/dev/null)/ar" ]; then
+    # `ar` resolves somewhere other than our npm bin -> system ar is winning.
+    # Only warn if the system ar looks like the archive tool (has -d/-r flags).
+    if /usr/bin/ar --help 2>/dev/null | grep -q -- '-d \[-TLsv\]'; then
+      warn "Note: 'ar' on your PATH is /usr/bin/ar (the BSD archive tool)."
+      warn "      Our short alias is now 'arb' to avoid that collision."
+      warn "      Use 'agent-rollback' or 'arb' for agent-rollback commands."
+    fi
+  fi
 fi
 
 # ---- optional: install the agent skill -------------------------------------
@@ -300,6 +319,7 @@ printf "%sDone.%s Try it in any repo:\n" "$C_GREEN" "$C_RESET"
 printf "  %sagent-rollback init%s\n" "$C_BOLD" "$C_RESET"
 printf "  %sagent-rollback checkpoint 'before refactor'%s\n" "$C_BOLD" "$C_RESET"
 printf "  %sagent-rollback run codex 'refactor the auth module'%s\n" "$C_BOLD" "$C_RESET"
+printf "  (or just:  %sarb init%s)\n" "$C_BOLD" "$C_RESET"
 hr
 
 if [ "$WITH_MCP" = "1" ]; then
