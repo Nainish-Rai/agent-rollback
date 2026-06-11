@@ -7,9 +7,7 @@
 `agent-rollback` is a CLI, an MCP server, and a Codex hook that gives you a
 Git-like safety net for AI-edited code. It captures content-addressed
 snapshots of the working tree, dedupes them so they cost ~zero disk, and
-lets you jump back to any point with a single command. It also works with
-Claude Code, Cursor, Windsurf, Copilot, Cline, and Gemini CLI via the
-`npx skills` installer.
+lets you jump back to any point with a single command.
 
 **Also known as:** Codex undo, Codex revert, Codex checkpoint, Codex
 rollback, Codex snapshot, Codex backup, Codex diff, Codex restore,
