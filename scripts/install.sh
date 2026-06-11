@@ -316,10 +316,10 @@ fi
 
 hr
 printf "%sDone.%s Try it in any repo:\n" "$C_GREEN" "$C_RESET"
-printf "  %sagent-rollback init%s\n" "$C_BOLD" "$C_RESET"
-printf "  %sagent-rollback checkpoint 'before refactor'%s\n" "$C_BOLD" "$C_RESET"
-printf "  %sagent-rollback run codex 'refactor the auth module'%s\n" "$C_BOLD" "$C_RESET"
-printf "  (or just:  %sarb init%s)\n" "$C_BOLD" "$C_RESET"
+printf "  %sarb init%s\n" "$C_BOLD" "$C_RESET"
+printf "  %sarb checkpoint 'before refactor'%s\n" "$C_BOLD" "$C_RESET"
+printf "  %sarb run codex 'refactor the auth module'%s\n" "$C_BOLD" "$C_RESET"
+printf "  (full name %sagent-rollback%s works too — both are identical)\n" "$C_BOLD" "$C_RESET"
 hr
 
 if [ "$WITH_MCP" = "1" ]; then

@@ -4,10 +4,11 @@
 > your workspace, diff what changed, and restore files in one command —
 > before, during, and after any Codex run.
 
-`agent-rollback` is a CLI, an MCP server, and a Codex hook that gives you a
-Git-like safety net for AI-edited code. It captures content-addressed
-snapshots of the working tree, dedupes them so they cost ~zero disk, and
-lets you jump back to any point with a single command.
+`agent-rollback` is a CLI (`agent-rollback` / short alias `arb`), an MCP
+server, and a Codex hook that gives you a Git-like safety net for
+AI-edited code. It captures content-addressed snapshots of the working
+tree, dedupes them so they cost ~zero disk, and lets you jump back to
+any point with a single command.
 
 **Also known as:** Codex undo, Codex revert, Codex checkpoint, Codex
 rollback, Codex snapshot, Codex backup, Codex diff, Codex restore,
@@ -57,19 +58,22 @@ Codex file history, Codex safety net, Codex MCP, Codex time travel.
 The full user flow, in order. From "never heard of it" to "rolled back a
 bad Codex edit" in about 30 seconds of typing.
 
+`agent-rollback` is the full command. `arb` is a 3-char alias for
+when you're in a hurry. They do exactly the same thing.
+
 ### Step 0 — Install (one line)
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/Nainish-Rai/agent-rollback/main/scripts/install.sh | bash -s -- --all
 ```
 
-This installs the `agent-rollback` binary globally, registers the MCP
-server in `~/.codex/config.toml`, and installs the agent skill for 18+
-agents. Verify it worked:
+This installs the `agent-rollback` (and `arb`) binary globally,
+registers the MCP server in `~/.codex/config.toml`, and installs the
+agent skill for 18+ agents. Verify it worked:
 
 ```bash
 agent-rollback --help   # see all subcommands
-arb --help              # short alias (3 chars)
+arb --help              # short alias, same output
 ```
 
 If you'd rather use npm only (no MCP, no skill), drop the `--all` flag —
@@ -79,7 +83,7 @@ or run `npm install -g agent-rollback` instead.
 
 ```bash
 mkdir demo && cd demo && git init
-agent-rollback init
+agent-rollback init         # or: arb init
 ```
 
 This creates `.agent-rollback/` in the project. All your snapshots will
@@ -100,33 +104,23 @@ examples. No memorization needed.
 
 > **You:** *"make a checkpoint called 'green tests' and refactor the auth module"*
 
-```text
-Codex internally:
-  mcp__agent-rollback__create_checkpoint({ name: "green tests" })
-  (then proceeds with the refactor in the working tree)
-
-Codex: "Created cp-183544-green-tests-ed96. Refactoring auth module now.
-        If I make a mess, just say 'go back'."
-```
+> **Codex:** *"Created cp-183544-green-tests-ed96. Refactoring auth module now. If I make a mess, just say 'go back'."*
 
 ### Step 4 — Browse checkpoints
 
 > **You:** *"show me checkpoints"*
 
-```text
-Codex internally:
-  mcp__agent-rollback__list_checkpoints({ limit: 20 })
-
-Codex:
-  • cp-183544-green-tests-ed96   12 sec ago   green tests
-  • cp-cold-start-deadbeef       1 min ago    cold start
-  2 checkpoints, ~0.4 MB on disk.
-```
+> **Codex:**
+> ```
+>   • cp-183544-green-tests-ed96   12 sec ago   green tests
+>   • cp-cold-start-deadbeef       1 min ago    cold start
+>   2 checkpoints, ~0.4 MB on disk.
+> ```
 
 Or from the CLI:
 
 ```bash
-agent-rollback list              # human-readable
+agent-rollback list              # or: arb list
 agent-rollback list --json       # machine-readable
 agent-rollback tui               # interactive terminal browser
 ```
@@ -135,18 +129,12 @@ agent-rollback tui               # interactive terminal browser
 
 > **You:** *"go to the last checkpoint"*
 
-```text
-Codex internally:
-  mcp__agent-rollback__undo({ count: 1 })
-
-Codex: "Reverted to cp-183544-green-tests-ed96. 4 files restored, safety
-        checkpoint cp-...-safety-... created automatically."
-```
+> **Codex:** *"Reverted to cp-183544-green-tests-ed96. 4 files restored, safety checkpoint cp-...-safety-... created automatically."*
 
 Or from the CLI:
 
 ```bash
-agent-rollback revert cp-183544-green-tests-ed96 --yes   # restore one
+agent-rollback revert cp-183544-green-tests-ed96 --yes   # or: arb revert ...
 agent-rollback undo 1 --yes                              # undo the last N
 ```
 
@@ -154,16 +142,14 @@ agent-rollback undo 1 --yes                              # undo the last N
 
 > **You:** *"what did the refactor change vs the green tests checkpoint?"*
 
-```text
-Codex internally:
-  mcp__agent-rollback__diff_checkpoints({ from: "cp-green-tests-...", to: "cp-current" })
-
-Codex: "3 files changed in src/auth/:
-          src/auth/login.js   (+42, -18)
-          src/auth/token.js   (+12, -4)
-          src/auth/index.js  (+3, -0)
-        Want me to revert just those, or roll back the whole checkpoint?"
-```
+> **Codex:**
+> ```
+>   3 files changed in src/auth/:
+>     src/auth/login.js   (+42, -18)
+>     src/auth/token.js   (+12, -4)
+>     src/auth/index.js  (+3, -0)
+>   Want me to revert just those, or roll back the whole checkpoint?
+> ```
 
 That's the whole loop. Everything below is optional depth.
 
@@ -181,7 +167,7 @@ didn't want. `agent-rollback` gives you:
 - **Agent-native surface**: an MCP server, a Codex hook, and a SKILL.md
   so any agent (Codex, Claude Code, Cursor, etc.) can use it without you
   being in the loop.
-- **Three ways to use it**: a CLI (`agent-rollback` / `ar`), an MCP server
+- **Three ways to use it**: a CLI (`agent-rollback` / `arb`), an MCP server
   any agent can call, or a Codex hook that auto-snapshots on every prompt
   and tool use.
 
@@ -247,8 +233,12 @@ curl -fsSL https://raw.githubusercontent.com/Nainish-Rai/agent-rollback/main/scr
 npm install -g agent-rollback
 ```
 
-Requires **Node.js >= 20**. Adds `agent-rollback` and `arb` (short alias)
-to your `PATH`.
+Requires **Node.js >= 20**. Adds two commands to your `PATH`:
+
+- `agent-rollback` — the full name, what you'll see in docs and code
+- `arb` — a 3-char short alias, perfect for muscle memory and tight loops
+
+Both are identical; pick whichever you type faster.
 
 > **Why `arb` and not `ar`?**
 >
@@ -462,129 +452,111 @@ Restores are dry-run by default and require `mode: "apply"` plus
 
 #### Chat with Codex — natural-language examples
 
-Once the MCP server is registered, you can talk to Codex in plain English
-and it'll call the right tool. These are real flows that work today:
+Once the MCP server is registered, you can talk to Codex in plain
+English and it'll do the right thing. Same prompts work with any
+MCP-compatible agent (Claude Code, Cursor, etc.). The `agent-rollback`
+binary is always there as a fallback — every flow has a CLI equivalent.
 
 **Checkpoint, then do something risky**
 
-> You: *make a checkpoint and refactor task service*
+> **You:** *"make a checkpoint and refactor task service"*
 
-```text
-Codex internally:
-  → mcp__agent-rollback__create_checkpoint({ name: "before task service refactor" })
-  → (then proceeds with the refactor in the working tree)
+> **Codex:** *"Created checkpoint cp-183544-before-task-service-refactor-ed96. Refactoring task service now. If I make a mess, just say 'go back'."*
 
-Codex: "Created checkpoint cp-183544-before-task-service-refactor-ed96.
-        Refactoring task service now. If I make a mess, just say 'go back'."
+```bash
+# CLI equivalent
+agent-rollback checkpoint "before task service refactor"
+arb checkpoint "before task service refactor"
 ```
 
 **Show me my checkpoints**
 
-> You: *show me checkpoints*
+> **You:** *"show me checkpoints"*
 
-```text
-Codex internally:
-  → mcp__agent-rollback__list_checkpoints({ limit: 20 })
+> **Codex:**
+> ```
+>   • cp-183544-before-task-service-refactor-ed96   2 min ago   before task service refactor
+>   • cp-170221-after-auth-rewrite-a1b2              14 min ago  after auth rewrite
+>   • cp-091833-cold-start-deadbeef                  1 hr ago     cold start
+>   3 checkpoints, ~1.2 MB on disk.
+> ```
 
-Codex:
-  • cp-183544-before-task-service-refactor-ed96   2 min ago   before task service refactor
-  • cp-170221-after-auth-rewrite-a1b2              14 min ago  after auth rewrite
-  • cp-091833-cold-start-deadbeef                  1 hr ago     cold start
-  3 checkpoints, ~1.2 MB on disk.
+```bash
+agent-rollback list            # or: arb list
+agent-rollback list --json
+agent-rollback tui
 ```
 
 **Roll back to the last checkpoint**
 
-> You: *go to last checkpoint*
+> **You:** *"go to last checkpoint"*
 
-```text
-Codex internally:
-  → mcp__agent-rollback__undo({ count: 1 })
+> **Codex:** *"Reverted to cp-183544-before-task-service-refactor-ed96. 4 files restored, safety checkpoint cp-...-safety-... created."*
 
-Codex: "Reverted to cp-183544-before-task-service-refactor-ed96.
-        4 files restored, safety checkpoint cp-...-safety-... created."
+```bash
+agent-rollback undo 1 --yes    # or: arb undo 1 --yes
 ```
 
 **Diff between two checkpoints**
 
-> You: *what changed between the auth checkpoint and now?*
+> **You:** *"what changed between the auth checkpoint and now?"*
 
-```text
-Codex internally:
-  → mcp__agent-rollback__list_checkpoints({ limit: 5 })
-  → mcp__agent-rollback__diff_checkpoints({
-      from: "cp-170221-after-auth-rewrite-a1b2",
-      to:   "cp-183544-before-task-service-refactor-ed96"
-    })
+> **Codex:** *"3 files changed in src/services/auth/: login.js (+42, -18), token.js (+12, -4), index.js (+3, -0). Want me to revert just those, or roll back the whole checkpoint?"*
 
-Codex: "3 files changed in src/services/auth/:
-          - src/services/auth/login.js   (+42, -18)
-          - src/services/auth/token.js   (+12, -4)
-          - src/services/auth/index.js  (+3, -0)
-        Want me to revert just those, or roll back the whole checkpoint?"
+```bash
+agent-rollback diff cp-170221-after-auth-rewrite-a1b2 cp-183544-before-task-service-refactor-ed96
+agent-rollback diff cp-170221-after-auth-rewrite-a1b2 cp-183544-before-task-service-refactor-ed96 --patch
 ```
 
 **Search checkpoints by what they were about**
 
-> You: *find my checkpoint about the mongodb migration*
+> **You:** *"find my checkpoint about the mongodb migration"*
 
-```text
-Codex internally:
-  → mcp__agent-rollback__search_checkpoints({ query: "mongodb" })
+> **Codex:** *"Found 2: cp-153012-before-mongodb-migration-c0de (pinned), cp-153045-after-migration-b33f."*
 
-Codex: "Found 2: cp-153012-before-mongodb-migration-c0de (pinned), cp-153045-after-migration-b33f."
+```bash
+agent-rollback search "mongodb"   # or: arb search "mongodb"
 ```
 
 **Pin a known-good checkpoint so it never gets pruned**
 
-> You: *pin the v0.4 release checkpoint as "v0.4 release"*
+> **You:** *"pin the v0.4 release checkpoint as 'v0.4 release'"*
 
-```text
-Codex internally:
-  → mcp__agent-rollback__pin_checkpoint({ id: "cp-...", name: "v0.4 release" })
+> **Codex:** *"Pinned. It'll survive any prune."*
 
-Codex: "Pinned. It'll survive any prune."
+```bash
+agent-rollback pin cp-... "v0.4 release"
 ```
 
 **Preview a restore before committing**
 
-> You: *dry-run restore to the auth checkpoint*
+> **You:** *"dry-run restore to the auth checkpoint"*
 
-```text
-Codex internally:
-  → mcp__agent-rollback__restore_checkpoint({
-      id: "cp-170221-after-auth-rewrite-a1b2",
-      mode: "dry-run"
-    })
+> **Codex:** *"Dry run would restore 3 files in src/services/auth/. No conflicts. Say 'apply' to do it for real."*
 
-Codex: "Dry run would restore 3 files in src/services/auth/. No conflicts. Say 'apply' to do it for real."
+```bash
+agent-rollback revert cp-170221-after-auth-rewrite-a1b2 --yes   # dry-run is the default
 ```
 
 **Apply a restore**
 
-> You: *apply it*
+> **You:** *"apply it"*
 
-```text
-Codex internally:
-  → mcp__agent-rollback__restore_checkpoint({
-      id: "cp-170221-after-auth-rewrite-a1b2",
-      mode: "apply",
-      force: true
-    })
+> **Codex:** *"Restored. Workspace now matches cp-170221-after-auth-rewrite-a1b2. Safety checkpoint created."*
 
-Codex: "Restored. Workspace now matches cp-170221-after-auth-rewrite-a1b2. Safety checkpoint created."
+```bash
+agent-rollback revert cp-170221-after-auth-rewrite-a1b2 --force --yes
 ```
 
 **Clean up old checkpoints**
 
-> You: *prune old checkpoints but keep the last 10 and any pinned ones*
+> **You:** *"prune old checkpoints but keep the last 10 and any pinned ones"*
 
-```text
-Codex internally:
-  → mcp__agent-rollback__prune_checkpoints({ dryRun: true, keepLast: 10, keepPinned: true })
+> **Codex:** *"Dry run: 4 checkpoints would be deleted (cp-..., cp-..., cp-..., cp-...). Pinned (1) and last 10 (10) are protected. Say 'go ahead' to apply."*
 
-Codex: "Dry run: 4 checkpoints would be deleted (cp-..., cp-..., cp-..., cp-...).
-        Pinned (1) and last 10 (10) are protected. Say 'go ahead' to apply."
+```bash
+agent-rollback prune --keep-last 10 --keep-pinned --dry-run
+agent-rollback prune --keep-last 10 --keep-pinned --yes
 ```
 
 #### MCP tool reference
