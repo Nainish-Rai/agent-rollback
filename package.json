@@ -1,6 +1,6 @@
 {
   "name": "agent-rollback",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "Git-like undo, revert, and rollback checkpoints for OpenAI Codex CLI. MCP server + hooks snapshot every edit. Restore in one cmd. Free, MIT licensed.",
   "type": "module",
   "bin": {
