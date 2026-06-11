@@ -1,11 +1,17 @@
 {
   "name": "agent-rollback",
   "version": "0.1.3",
-  "description": "Git-like rollback checkpoints for Codex CLI runs.",
+  "description": "Git-like undo and rollback checkpoints for OpenAI Codex CLI. Snapshot, diff, and restore files before and after Codex edits. MCP server + Codex hooks for automatic safety net. Works with Claude Code, Cursor, Windsurf, Copilot, Cline, Gemini CLI.",
   "type": "module",
   "bin": {
     "agent-rollback": "./bin/agent-rollback.js",
     "ar": "./bin/ar.js"
+  },
+  "homepage": "https://github.com/Nainish-Rai/agent-rollback#readme",
+  "bugs": "https://github.com/Nainish-Rai/agent-rollback/issues",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Nainish-Rai/agent-rollback.git"
   },
   "files": [
     "AGENTS.md",
@@ -27,9 +33,41 @@
   },
   "keywords": [
     "codex",
+    "codex-cli",
+    "openai-codex",
+    "codex-mcp",
+    "codex-undo",
+    "codex-revert",
+    "codex-checkpoint",
+    "codex-rollback",
+    "codex-snapshot",
+    "codex-safety-net",
+    "codex-backup",
+    "undo",
+    "revert",
     "rollback",
+    "restore",
     "checkpoint",
-    "cli"
+    "snapshot",
+    "diff",
+    "workspace-snapshot",
+    "file-history",
+    "point-in-time-recovery",
+    "safety-net",
+    "ai-agent",
+    "agent",
+    "cli",
+    "mcp",
+    "mcp-server",
+    "model-context-protocol",
+    "claude-code",
+    "cursor",
+    "windsurf",
+    "copilot",
+    "cline",
+    "gemini-cli",
+    "dev-tools",
+    "developer-tools"
   ],
   "license": "MIT",
   "dependencies": {
