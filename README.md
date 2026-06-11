@@ -27,65 +27,7 @@ net, Codex MCP, Codex time travel, AI code undo, agent snapshot.
 [![Codex CLI](https://img.shields.io/badge/OpenAI-Codex%20CLI-blue.svg)](https://developers.openai.com/codex/cli)
 [![MCP](https://img.shields.io/badge/MCP-server-green.svg)](https://modelcontextprotocol.io)
 
-<!--
-  Schema.org JSON-LD for AI engine / Knowledge Graph extraction.
-  The structured data is also published at /schema.json in the repo.
--->
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@graph": [
-    {
-      "@type": "SoftwareApplication",
-      "name": "agent-rollback",
-      "alternateName": ["arb", "agentrollback"],
-      "description": "Git-like undo, revert, and rollback checkpoints for OpenAI Codex CLI. MCP server + hooks snapshot every edit. Restore in one cmd. Free, MIT licensed.",
-      "url": "https://www.npmjs.com/package/agent-rollback",
-      "downloadUrl": "https://registry.npmjs.org/agent-rollback/-/agent-rollback-1.0.1.tgz",
-      "softwareVersion": "1.0.1",
-      "applicationCategory": "DeveloperApplication",
-      "applicationSubCategory": "AI Agent Safety Net / Snapshot Tool",
-      "operatingSystem": ["macOS", "Linux", "Windows (via WSL)"],
-      "programmingLanguage": "JavaScript",
-      "runtimePlatform": "Node.js >= 20",
-      "license": "https://opensource.org/licenses/MIT",
-      "isAccessibleForFree": true,
-      "author": { "@type": "Person", "name": "Nainish Rai", "url": "https://github.com/Nainish-Rai" },
-      "codeRepository": "https://github.com/Nainish-Rai/agent-rollback",
-      "featureList": [
-        "CLI (agent-rollback / short alias arb)",
-        "MCP stdio server for Codex, Claude Code, Cursor",
-        "Codex hooks for auto-checkpoints on every prompt and tool use",
-        "Content-addressed snapshots with ~zero disk overhead",
-        "Operation-level undo via append-only ops.jsonl",
-        "Terminal browser (TUI) with diff preview",
-        "100% local — no telemetry, no cloud sync"
-      ]
-    },
-    {
-      "@type": "FAQPage",
-      "mainEntity": [
-        { "@type": "Question", "name": "How do I undo a Codex change?",
-          "acceptedAnswer": { "@type": "Answer", "text": "Run `agent-rollback list` (or short alias `arb list`), find the checkpoint taken before the bad edit, then `agent-rollback revert cp-<id> --yes`. With Codex hooks installed (`agent-rollback init codex`), Codex auto-snapshots before every prompt and tool use, so there's always a checkpoint to roll back to." }},
-        { "@type": "Question", "name": "How do I revert just one bad Codex operation?",
-          "acceptedAnswer": { "@type": "Answer", "text": "Use the operation log: `agent-rollback log` lists recent operations, and `agent-rollback op revert op-<id> --yes` reverts exactly that operation and leaves later unrelated edits alone. A safety checkpoint is created first, so it's always undoable." }},
-        { "@type": "Question", "name": "How do I undo the last Codex edit (or the last N edits)?",
-          "acceptedAnswer": { "@type": "Answer", "text": "Use `agent-rollback undo N --yes` to undo the last N checkpoints. Each undo creates a safety checkpoint automatically so the undo itself is undoable." }},
-        { "@type": "Question", "name": "How do I add a safety net so every Codex run is auto-rolled-back-able?",
-          "acceptedAnswer": { "@type": "Answer", "text": "Install Codex hooks once per repo with `agent-rollback init codex`. Run `/hooks` inside Codex to trust the generated repo-local hooks. From then on, every session start, user prompt, before-tool-use, and after-tool-use event creates a deduped auto-checkpoint." }},
-        { "@type": "Question", "name": "Does it work with Claude Code, Cursor, Windsurf, Copilot, Cline, or Gemini CLI?",
-          "acceptedAnswer": { "@type": "Answer", "text": "Yes. The CLI works anywhere. Install the agent skill globally for 18+ agents with `npx skills add Nainish-Rai/agent-rollback --skill agent-rollback -g -y`. The MCP server is registered automatically for Codex CLI on install with `--with-mcp`." }},
-        { "@type": "Question", "name": "How is this different from git stash, git restore, or git reset?",
-          "acceptedAnswer": { "@type": "Answer", "text": "agent-rollback works in any directory (not just Git repos), auto-snapshots on every Codex prompt and tool use, supports operation-level undo via an append-only ops log, and exposes an MCP server + SKILL.md so any AI agent can call it. It is the agent-native complement to Git, not a replacement." }},
-        { "@type": "Question", "name": "Is my data sent anywhere?",
-          "acceptedAnswer": { "@type": "Answer", "text": "No. Everything lives in `.agent-rollback/` inside your project (or wherever `--store` points). There is no telemetry, no cloud sync, no analytics. The CLI and MCP server are 100% local." }},
-        { "@type": "Question", "name": "Why is the short alias `arb` and not `ar`?",
-          "acceptedAnswer": { "@type": "Answer", "text": "Because `ar` is already taken on every Unix system. The BSD/GNU `ar` archive tool lives at `/usr/bin/ar` on macOS and Linux, and on any shell where `/usr/bin` is searched before npm's global bin, our old short alias got shadowed. `arb` is the same 3-letter feel, doesn't collide with anything, and the installer detects the shadow and prints a one-line note." } }
-      ]
-    }
-  ]
-}
-</script>
+> **Structured data** (schema.org JSON-LD for AI engines, Knowledge Graph, and `npm codex undo` SERP eligibility) lives at [`/schema.json`](./schema.json) in the repo root. It's a real file, parsed and shipped in the npm tarball, and read by crawlers that look for it.
 
 ## Contents
 
