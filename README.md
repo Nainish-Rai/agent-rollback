@@ -24,6 +24,13 @@ Codex file history, Codex safety net, Codex MCP, Codex time travel.
 ## Contents
 
 - [30-second start](#30-second-start)
+  - [Step 0 — Install (one line)](#step-0--install-one-line)
+  - [Step 1 — Initialize a repo](#step-1--initialize-a-repo)
+  - [Step 2 — Ask the agent what it can do](#step-2--ask-the-agent-what-it-can-do)
+  - [Step 3 — Create a checkpoint, then do something risky](#step-3--create-a-checkpoint-then-do-something-risky)
+  - [Step 4 — Browse checkpoints](#step-4--browse-checkpoints)
+  - [Step 5 — Made a mess? Roll back](#step-5--made-a-mess-roll-back)
+  - [Step 6 — See what changed](#step-6--see-what-changed)
 - [Why](#why)
 - [Install](#install)
 - [AI agent skill](#ai-agent-skill)
@@ -47,27 +54,118 @@ Codex file history, Codex safety net, Codex MCP, Codex time travel.
 
 ## 30-second start
 
-```bash
-# 1. one-line install (Node >= 20)
-curl -fsSL https://raw.githubusercontent.com/Nainish-Rai/agent-rollback/main/scripts/install.sh | bash
+The full user flow, in order. From "never heard of it" to "rolled back a
+bad Codex edit" in about 30 seconds of typing.
 
-# 2. inside any repo
-agent-rollback init
-agent-rollback checkpoint "before refactor"
-agent-rollback run codex "refactor the auth module"
-
-# 3. made a mess? roll back
-agent-rollback list
-agent-rollback revert cp-before-refactor-ed96 --yes
-```
-
-That's the whole loop. Everything below is optional depth.
-
-Want the AI agent skill **and** the MCP server wired up in one go?
+### Step 0 — Install (one line)
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/Nainish-Rai/agent-rollback/main/scripts/install.sh | bash -s -- --all
 ```
+
+This installs the `agent-rollback` binary globally, registers the MCP
+server in `~/.codex/config.toml`, and installs the agent skill for 18+
+agents. Verify it worked:
+
+```bash
+agent-rollback --help   # see all subcommands
+ar --help               # short alias works the same way
+```
+
+If you'd rather use npm only (no MCP, no skill), drop the `--all` flag —
+or run `npm install -g agent-rollback` instead.
+
+### Step 1 — Initialize a repo
+
+```bash
+mkdir demo && cd demo && git init
+agent-rollback init
+```
+
+This creates `.agent-rollback/` in the project. All your snapshots will
+live here. (You can ignore it in your `.gitignore`; it's yours, not your
+repo's.)
+
+### Step 2 — Ask the agent what it can do
+
+Open Codex in this repo and just say:
+
+> **You:** *"what can you do for checkpoints?"*
+
+Codex reads the installed `SKILL.md` and lists the full surface — create,
+list, show, diff, revert, undo, pin, prune, replay, tui — with one-line
+examples. No memorization needed.
+
+### Step 3 — Create a checkpoint, then do something risky
+
+> **You:** *"make a checkpoint called 'green tests' and refactor the auth module"*
+
+```text
+Codex internally:
+  mcp__agent-rollback__create_checkpoint({ name: "green tests" })
+  (then proceeds with the refactor in the working tree)
+
+Codex: "Created cp-183544-green-tests-ed96. Refactoring auth module now.
+        If I make a mess, just say 'go back'."
+```
+
+### Step 4 — Browse checkpoints
+
+> **You:** *"show me checkpoints"*
+
+```text
+Codex internally:
+  mcp__agent-rollback__list_checkpoints({ limit: 20 })
+
+Codex:
+  • cp-183544-green-tests-ed96   12 sec ago   green tests
+  • cp-cold-start-deadbeef       1 min ago    cold start
+  2 checkpoints, ~0.4 MB on disk.
+```
+
+Or from the CLI:
+
+```bash
+agent-rollback list              # human-readable
+agent-rollback list --json       # machine-readable
+agent-rollback tui               # interactive terminal browser
+```
+
+### Step 5 — Made a mess? Roll back
+
+> **You:** *"go to the last checkpoint"*
+
+```text
+Codex internally:
+  mcp__agent-rollback__undo({ count: 1 })
+
+Codex: "Reverted to cp-183544-green-tests-ed96. 4 files restored, safety
+        checkpoint cp-...-safety-... created automatically."
+```
+
+Or from the CLI:
+
+```bash
+agent-rollback revert cp-183544-green-tests-ed96 --yes   # restore one
+agent-rollback undo 1 --yes                              # undo the last N
+```
+
+### Step 6 — See what changed
+
+> **You:** *"what did the refactor change vs the green tests checkpoint?"*
+
+```text
+Codex internally:
+  mcp__agent-rollback__diff_checkpoints({ from: "cp-green-tests-...", to: "cp-current" })
+
+Codex: "3 files changed in src/auth/:
+          src/auth/login.js   (+42, -18)
+          src/auth/token.js   (+12, -4)
+          src/auth/index.js  (+3, -0)
+        Want me to revert just those, or roll back the whole checkpoint?"
+```
+
+That's the whole loop. Everything below is optional depth.
 
 ## Why
 
