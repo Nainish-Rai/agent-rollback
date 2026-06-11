@@ -5,7 +5,7 @@
   "type": "module",
   "bin": {
     "agent-rollback": "./bin/agent-rollback.js",
-    "ar": "./bin/ar.js"
+    "arb": "./bin/arb.js"
   },
   "homepage": "https://github.com/Nainish-Rai/agent-rollback#readme",
   "bugs": "https://github.com/Nainish-Rai/agent-rollback/issues",
