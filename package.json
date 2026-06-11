@@ -1,6 +1,6 @@
 {
   "name": "agent-rollback",
-  "version": "0.1.6",
+  "version": "1.0.0",
   "description": "Git-like undo and rollback checkpoints for OpenAI Codex CLI. Snapshot, diff, and restore files before and after Codex edits. MCP server + Codex hooks for automatic safety net. Works with Claude Code, Cursor, Windsurf, Copilot, Cline, Gemini CLI.",
   "type": "module",
   "bin": {
