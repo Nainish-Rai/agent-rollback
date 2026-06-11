@@ -38,6 +38,7 @@ Codex file history, Codex safety net, Codex MCP, Codex time travel.
   - [Replay from a checkpoint](#replay-from-a-checkpoint)
   - [MCP server](#mcp-server)
 - [Storage model](#storage-model)
+- [Chat with Codex — MCP usage examples](#chat-with-codex--natural-language-examples)
 - [Integration references](#integration-references)
 - [FAQ — Codex undo, revert, and rollback](#faq--codex-undo-revert-and-rollback)
 - [Development](#development)
@@ -350,6 +351,147 @@ The MCP server exposes `create_checkpoint`, `list_checkpoints`,
 `prune_checkpoints`, `search_checkpoints`, `pin_checkpoint`, and `undo`.
 Restores are dry-run by default and require `mode: "apply"` plus
 `force: true` to mutate files.
+
+#### Chat with Codex — natural-language examples
+
+Once the MCP server is registered, you can talk to Codex in plain English
+and it'll call the right tool. These are real flows that work today:
+
+**Checkpoint, then do something risky**
+
+> You: *make a checkpoint and refactor task service*
+
+```text
+Codex internally:
+  → mcp__agent-rollback__create_checkpoint({ name: "before task service refactor" })
+  → (then proceeds with the refactor in the working tree)
+
+Codex: "Created checkpoint cp-183544-before-task-service-refactor-ed96.
+        Refactoring task service now. If I make a mess, just say 'go back'."
+```
+
+**Show me my checkpoints**
+
+> You: *show me checkpoints*
+
+```text
+Codex internally:
+  → mcp__agent-rollback__list_checkpoints({ limit: 20 })
+
+Codex:
+  • cp-183544-before-task-service-refactor-ed96   2 min ago   before task service refactor
+  • cp-170221-after-auth-rewrite-a1b2              14 min ago  after auth rewrite
+  • cp-091833-cold-start-deadbeef                  1 hr ago     cold start
+  3 checkpoints, ~1.2 MB on disk.
+```
+
+**Roll back to the last checkpoint**
+
+> You: *go to last checkpoint*
+
+```text
+Codex internally:
+  → mcp__agent-rollback__undo({ count: 1 })
+
+Codex: "Reverted to cp-183544-before-task-service-refactor-ed96.
+        4 files restored, safety checkpoint cp-...-safety-... created."
+```
+
+**Diff between two checkpoints**
+
+> You: *what changed between the auth checkpoint and now?*
+
+```text
+Codex internally:
+  → mcp__agent-rollback__list_checkpoints({ limit: 5 })
+  → mcp__agent-rollback__diff_checkpoints({
+      from: "cp-170221-after-auth-rewrite-a1b2",
+      to:   "cp-183544-before-task-service-refactor-ed96"
+    })
+
+Codex: "3 files changed in src/services/auth/:
+          - src/services/auth/login.js   (+42, -18)
+          - src/services/auth/token.js   (+12, -4)
+          - src/services/auth/index.js  (+3, -0)
+        Want me to revert just those, or roll back the whole checkpoint?"
+```
+
+**Search checkpoints by what they were about**
+
+> You: *find my checkpoint about the mongodb migration*
+
+```text
+Codex internally:
+  → mcp__agent-rollback__search_checkpoints({ query: "mongodb" })
+
+Codex: "Found 2: cp-153012-before-mongodb-migration-c0de (pinned), cp-153045-after-migration-b33f."
+```
+
+**Pin a known-good checkpoint so it never gets pruned**
+
+> You: *pin the v0.4 release checkpoint as "v0.4 release"*
+
+```text
+Codex internally:
+  → mcp__agent-rollback__pin_checkpoint({ id: "cp-...", name: "v0.4 release" })
+
+Codex: "Pinned. It'll survive any prune."
+```
+
+**Preview a restore before committing**
+
+> You: *dry-run restore to the auth checkpoint*
+
+```text
+Codex internally:
+  → mcp__agent-rollback__restore_checkpoint({
+      id: "cp-170221-after-auth-rewrite-a1b2",
+      mode: "dry-run"
+    })
+
+Codex: "Dry run would restore 3 files in src/services/auth/. No conflicts. Say 'apply' to do it for real."
+```
+
+**Apply a restore**
+
+> You: *apply it*
+
+```text
+Codex internally:
+  → mcp__agent-rollback__restore_checkpoint({
+      id: "cp-170221-after-auth-rewrite-a1b2",
+      mode: "apply",
+      force: true
+    })
+
+Codex: "Restored. Workspace now matches cp-170221-after-auth-rewrite-a1b2. Safety checkpoint created."
+```
+
+**Clean up old checkpoints**
+
+> You: *prune old checkpoints but keep the last 10 and any pinned ones*
+
+```text
+Codex internally:
+  → mcp__agent-rollback__prune_checkpoints({ dryRun: true, keepLast: 10, keepPinned: true })
+
+Codex: "Dry run: 4 checkpoints would be deleted (cp-..., cp-..., cp-..., cp-...).
+        Pinned (1) and last 10 (10) are protected. Say 'go ahead' to apply."
+```
+
+#### MCP tool reference
+
+| Tool                  | What it does                                              | Required args           | Optional args                       |
+| --------------------- | --------------------------------------------------------- | ----------------------- | ----------------------------------- |
+| `create_checkpoint`   | Snapshot the current workspace                            | —                       | `name`, `message`                   |
+| `list_checkpoints`    | List recent checkpoints, newest first                    | —                       | `limit`, `query`                    |
+| `show_checkpoint`     | Show one checkpoint manifest                              | `id`                    | —                                   |
+| `diff_checkpoints`    | Show changed paths between two checkpoints                | `from`, `to`            | —                                   |
+| `restore_checkpoint`  | Restore workspace to a checkpoint (dry-run by default)   | `id`                    | `mode` (`"apply"` to mutate), `force` |
+| `prune_checkpoints`   | Delete old unpinned checkpoints                          | —                       | `dryRun`, `keepLast`, `keepPinned` |
+| `search_checkpoints`  | Search by id, label, message, command, or source          | `query`                 | —                                   |
+| `pin_checkpoint`      | Pin a checkpoint with a durable name                      | `id`, `name`            | —                                   |
+| `undo`                | Restore to the checkpoint before the last N steps         | —                       | `count`, `force`                    |
 
 ## Storage model
 
