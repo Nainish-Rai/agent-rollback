@@ -1,18 +1,23 @@
-# agent-rollback
+# agent-rollback: codex undo, revert, and rollback checkpoints
 
-> **Undo, revert, and rollback checkpoints for OpenAI Codex CLI.** Snapshot
-> your workspace, diff what changed, and restore files in one command —
-> before, during, and after any Codex run.
+> **Last updated:** 2026-06-11 · **Version:** 1.0.1 · **Node:** >= 20 · **License:** MIT
 
-`agent-rollback` is a CLI (`agent-rollback` / short alias `arb`), an MCP
-server, and a Codex hook that gives you a Git-like safety net for
-AI-edited code. It captures content-addressed snapshots of the working
-tree, dedupes them so they cost ~zero disk, and lets you jump back to
-any point with a single command.
+**agent-rollback is the undo button for OpenAI Codex CLI.** It captures
+content-addressed snapshots of your workspace before, during, and after
+any Codex run, so you can restore any file — or the entire project —
+in one command. It works with or without a Git repo, exposes an MCP
+server and a Codex hook for automatic checkpoints, and is the only
+tool purpose-built for `codex undo`, `codex rollback`, and
+`codex checkpoint` outside of `git stash` workarounds.
 
-**Also known as:** Codex undo, Codex revert, Codex checkpoint, Codex
-rollback, Codex snapshot, Codex backup, Codex diff, Codex restore,
-Codex file history, Codex safety net, Codex MCP, Codex time travel.
+A Node.js CLI (`agent-rollback` / short alias `arb`), an MCP server for
+Codex / Claude Code / Cursor, and a Codex hook. MIT-licensed, 100%
+local — no telemetry, no cloud sync.
+
+**Search aliases users use to find this tool:** Codex undo, Codex
+revert, Codex checkpoint, Codex rollback, Codex snapshot, Codex
+backup, Codex diff, Codex restore, Codex file history, Codex safety
+net, Codex MCP, Codex time travel, AI code undo, agent snapshot.
 
 [![npm](https://img.shields.io/npm/v/agent-rollback.svg)](https://www.npmjs.com/package/agent-rollback)
 [![node](https://img.shields.io/node/v/agent-rollback.svg)](https://nodejs.org)
@@ -21,6 +26,66 @@ Codex file history, Codex safety net, Codex MCP, Codex time travel.
 [![stars](https://img.shields.io/github/stars/Nainish-Rai/agent-rollback.svg)](https://github.com/Nainish-Rai/agent-rollback/stargazers)
 [![Codex CLI](https://img.shields.io/badge/OpenAI-Codex%20CLI-blue.svg)](https://developers.openai.com/codex/cli)
 [![MCP](https://img.shields.io/badge/MCP-server-green.svg)](https://modelcontextprotocol.io)
+
+<!--
+  Schema.org JSON-LD for AI engine / Knowledge Graph extraction.
+  The structured data is also published at /schema.json in the repo.
+-->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "SoftwareApplication",
+      "name": "agent-rollback",
+      "alternateName": ["arb", "agentrollback"],
+      "description": "Git-like undo, revert, and rollback checkpoints for OpenAI Codex CLI. MCP server + hooks snapshot every edit. Restore in one cmd. Free, MIT licensed.",
+      "url": "https://www.npmjs.com/package/agent-rollback",
+      "downloadUrl": "https://registry.npmjs.org/agent-rollback/-/agent-rollback-1.0.1.tgz",
+      "softwareVersion": "1.0.1",
+      "applicationCategory": "DeveloperApplication",
+      "applicationSubCategory": "AI Agent Safety Net / Snapshot Tool",
+      "operatingSystem": ["macOS", "Linux", "Windows (via WSL)"],
+      "programmingLanguage": "JavaScript",
+      "runtimePlatform": "Node.js >= 20",
+      "license": "https://opensource.org/licenses/MIT",
+      "isAccessibleForFree": true,
+      "author": { "@type": "Person", "name": "Nainish Rai", "url": "https://github.com/Nainish-Rai" },
+      "codeRepository": "https://github.com/Nainish-Rai/agent-rollback",
+      "featureList": [
+        "CLI (agent-rollback / short alias arb)",
+        "MCP stdio server for Codex, Claude Code, Cursor",
+        "Codex hooks for auto-checkpoints on every prompt and tool use",
+        "Content-addressed snapshots with ~zero disk overhead",
+        "Operation-level undo via append-only ops.jsonl",
+        "Terminal browser (TUI) with diff preview",
+        "100% local — no telemetry, no cloud sync"
+      ]
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        { "@type": "Question", "name": "How do I undo a Codex change?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Run `agent-rollback list` (or short alias `arb list`), find the checkpoint taken before the bad edit, then `agent-rollback revert cp-<id> --yes`. With Codex hooks installed (`agent-rollback init codex`), Codex auto-snapshots before every prompt and tool use, so there's always a checkpoint to roll back to." }},
+        { "@type": "Question", "name": "How do I revert just one bad Codex operation?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Use the operation log: `agent-rollback log` lists recent operations, and `agent-rollback op revert op-<id> --yes` reverts exactly that operation and leaves later unrelated edits alone. A safety checkpoint is created first, so it's always undoable." }},
+        { "@type": "Question", "name": "How do I undo the last Codex edit (or the last N edits)?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Use `agent-rollback undo N --yes` to undo the last N checkpoints. Each undo creates a safety checkpoint automatically so the undo itself is undoable." }},
+        { "@type": "Question", "name": "How do I add a safety net so every Codex run is auto-rolled-back-able?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Install Codex hooks once per repo with `agent-rollback init codex`. Run `/hooks` inside Codex to trust the generated repo-local hooks. From then on, every session start, user prompt, before-tool-use, and after-tool-use event creates a deduped auto-checkpoint." }},
+        { "@type": "Question", "name": "Does it work with Claude Code, Cursor, Windsurf, Copilot, Cline, or Gemini CLI?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Yes. The CLI works anywhere. Install the agent skill globally for 18+ agents with `npx skills add Nainish-Rai/agent-rollback --skill agent-rollback -g -y`. The MCP server is registered automatically for Codex CLI on install with `--with-mcp`." }},
+        { "@type": "Question", "name": "How is this different from git stash, git restore, or git reset?",
+          "acceptedAnswer": { "@type": "Answer", "text": "agent-rollback works in any directory (not just Git repos), auto-snapshots on every Codex prompt and tool use, supports operation-level undo via an append-only ops log, and exposes an MCP server + SKILL.md so any AI agent can call it. It is the agent-native complement to Git, not a replacement." }},
+        { "@type": "Question", "name": "Is my data sent anywhere?",
+          "acceptedAnswer": { "@type": "Answer", "text": "No. Everything lives in `.agent-rollback/` inside your project (or wherever `--store` points). There is no telemetry, no cloud sync, no analytics. The CLI and MCP server are 100% local." }},
+        { "@type": "Question", "name": "Why is the short alias `arb` and not `ar`?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Because `ar` is already taken on every Unix system. The BSD/GNU `ar` archive tool lives at `/usr/bin/ar` on macOS and Linux, and on any shell where `/usr/bin` is searched before npm's global bin, our old short alias got shadowed. `arb` is the same 3-letter feel, doesn't collide with anything, and the installer detects the shadow and prints a one-line note." } }
+      ]
+    }
+  ]
+}
+</script>
 
 ## Contents
 
@@ -53,7 +118,7 @@ Codex file history, Codex safety net, Codex MCP, Codex time travel.
 - [Current boundaries](#current-boundaries)
 - [License](#license)
 
-## 30-second start
+## 30-second start: codex undo in 30 seconds
 
 The full user flow, in order. From "never heard of it" to "rolled back a
 bad Codex edit" in about 30 seconds of typing.
@@ -153,7 +218,80 @@ agent-rollback undo 1 --yes                              # undo the last N
 
 That's the whole loop. Everything below is optional depth.
 
-## Why
+## How to undo a Codex change in 4 commands
+
+The fastest path. Use this section as a cheatsheet when Codex has
+already done the damage.
+
+```bash
+# 1. install (or: npm install -g agent-rollback)
+curl -fsSL https://raw.githubusercontent.com/Nainish-Rai/agent-rollback/main/scripts/install.sh | bash -s -- --all
+
+# 2. initialize the store inside your repo
+agent-rollback init         # or: arb init
+
+# 3. (optional) take a checkpoint, then let Codex run
+agent-rollback checkpoint "green tests"
+agent-rollback run codex "refactor the auth module"
+
+# 4. made a mess? roll back
+agent-rollback list
+agent-rollback revert cp-<id> --yes   # or: agent-rollback undo 1 --yes
+```
+
+For the natural-language version (works in a Codex chat), just say:
+
+> *"go to last checkpoint"*, *"show me checkpoints"*, *"what did the
+> refactor change?"* — the MCP server handles the rest.
+
+## agent-rollback vs the alternatives
+
+How `agent-rollback` compares to other options a developer might reach
+for when Codex has edited too much:
+
+| Tool                          | License  | Codex-native | MCP server | Hooks | Per-op undo | Local-only |
+| ----------------------------- | -------- | ------------ | ---------- | ----- | ----------- | ---------- |
+| **agent-rollback (this)**     | MIT      | Yes          | Yes (9 tools) | Yes (auto + manual) | Yes (`op revert`) | Yes |
+| `pi-rollback` (npm)           | n/a      | Adapter      | No         | No    | No          | Yes        |
+| `agentame` (npm)              | n/a      | Adapter      | No         | No    | Yes (API-call layer) | Yes |
+| `A386official/diffback` (GH)  | MIT      | Adapter      | No         | No    | No          | Yes        |
+| `codex-revert` (mcpmarket)    | n/a      | Claude-only  | Skill      | No    | No          | Yes        |
+| Built-in `codex /rewind` (proposed) | n/a | Yes       | No         | n/a   | n/a         | Yes        |
+| `git stash`                   | GPLv2    | Manual       | No         | No    | No          | Yes        |
+| Editor `Cmd+Z`                | n/a      | n/a          | No         | No    | No          | Yes        |
+
+**When to use what:**
+
+- **`agent-rollback`** — the moment a Codex session drifts out of scope,
+  or for any pre-commit AI work. MCP-native, hook-native, per-op undo.
+- **`git stash` / `git restore`** — only when you've already made a
+  commit or have uncommitted work you want to set aside. Doesn't help
+  with the "Codex edited 7 files in 2 minutes" case.
+- **Editor `Cmd+Z`** — fine inside a single file, useless across a
+  multi-file Codex run, and lost when you close the editor.
+- **`pi-rollback` / `diffback`** — similar idea, fewer primitives
+  (no MCP server, no Codex hook, no op log, no TUI).
+- **`agentame`** — different layer: API-call rollback, approval gates.
+  Not for file edits.
+
+## Why this exists: codex safety net for AI-edited code
+
+OpenAI Codex CLI does not ship a built-in undo. The feature has been
+requested since 2024 — see
+[openai/codex#2788](https://github.com/openai/codex/issues/2788) ("History-linked
+checkpoints and file state restore"),
+[openai/codex#5082](https://github.com/openai/codex/issues/5082) ("Clicking
+'Undo' on file changes should absolutely not be staging changes into
+git"), and [openai/codex#6449](https://github.com/openai/codex/issues/6449)
+("Code and context rollback") for the canonical threads — and `git
+stash` workarounds are widely cited as fragile (no auto-trigger, no
+operation-level undo, no MCP surface). See also the community pain
+thread [r/codex: "Is there a revert/undo?"](https://www.reddit.com/r/codex/comments/1o8tuiq/is_there_a_revertundo/).
+
+`agent-rollback` is the agent snapshot layer: a CLI, an MCP server, a
+Codex hook, and a SKILL.md that give any AI agent the ability to
+checkpoint, list, diff, revert, pin, prune, undo, and replay its own
+workspace.
 
 Codex (and any agent that edits files) will eventually make a change you
 didn't want. `agent-rollback` gives you:
@@ -309,7 +447,7 @@ mkdir -p .cursor/skills
 ln -s "$(npm root -g)/agent-rollback/skills/agent-rollback" .cursor/skills/
 ```
 
-## Usage
+## Usage — codex checkpoint, revert, and undo commands
 
 All commands accept `--cwd <dir>`, `--store <dir>`, `--json` (for
 agents/CI), `--no-input`, and `--yes` (skip confirmations).
@@ -573,7 +711,7 @@ agent-rollback prune --keep-last 10 --keep-pinned --yes
 | `pin_checkpoint`      | Pin a checkpoint with a durable name                      | `id`, `name`            | —                                   |
 | `undo`                | Restore to the checkpoint before the last N steps         | —                       | `count`, `force`                    |
 
-## Storage model
+## Storage model: how the agent snapshot layer stores checkpoints
 
 The store lives in `.agent-rollback` by default (override with
 `--store <dir>`):
@@ -809,6 +947,14 @@ work.
   Windows, use WSL or `npm install -g agent-rollback` directly.
 - Restore is file-content atomic per file, not a full workspace
   transaction.
+
+## Mentioned in
+
+Independent third-party mentions help search engines and AI engines
+treat this project as authoritative. If you write about
+`agent-rollback`, please open a PR adding a link here.
+
+- _(no third-party mentions yet — be the first)_
 
 ## License
 
