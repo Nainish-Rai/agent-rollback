@@ -2,6 +2,9 @@
 
 > **Last updated:** 2026-06-11 · **Version:** 1.0.1 · **Node:** >= 20 · **License:** MIT
 
+<img width="2036" height="1854" alt="image" src="https://github.com/user-attachments/assets/cebc4891-acc0-4a5c-bae5-d0082cb45986" />
+
+
 **agent-rollback is the undo button for OpenAI Codex CLI.** It captures
 content-addressed snapshots of your workspace before, during, and after
 any Codex run, so you can restore any file — or the entire project —
